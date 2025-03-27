@@ -8,10 +8,10 @@ CC = gcc
 CFLAGS = -Wall -Wextra -Werror -g #-std=c99
 
 # Target executable name
-TARGET = my_readline
+TARGET = my_blockchain
 
 # Source files (add all your .c files here)
-SRC = my_readline.c  
+SRC = my_blockchain.c  
 
 # Object files (derived automatically from SRC)
 OBJ = $(SRC:.c=.o)
