@@ -82,15 +82,26 @@
 // Macros with logic (while/if/variables/...) are forbidden
 //-----------------------------------------------------
 
-typedef struct node
-{
+#define HASH_SIZE 256
 
+typedef struct Block
+{
+    size_t block_id;
+    Block *next;
+} Block;
+
+typedef struct Node
+{
+    size_t node_id;
+    Block *block_list;
+    Node *next;
 } Node;
 
-typedef struct block
-{
+// may be better to build an API with hashmap and set functionality
 
-} Block;
+// typedef struct Hashmap
+// {
+// }
 
 // add_node()
 // remove_node()
@@ -102,6 +113,7 @@ typedef struct block
 
 char **parse_string(char *string, int string_length);
 int my_strcmp(const char *s1, const char *s2);
+// int check_sync_status(Hashmap *map);
 
 // error_message1()
 // error_message2()
@@ -154,38 +166,60 @@ int main()
 
     // else just chill and save to stuff later
 
+    // int sync_status = check_sync_status(map);
     int sync_status = 1; // by default or if
     // checking through the file can confirm synced
+    // else will be 0
     int num_nodes = 0;
-    int input_string_length = 100;
+
+    int input_string_length = 40;
     char *input_string = malloc((input_string_length + 1) * sizeof(char));
-    if(!input_string)
+    if (!input_string)
     {
         printf("Error allocating memory\n");
         return -1;
-    } 
+    }
 
     int quit_flag = 0;
 
     // could use enums here!!! to simpify parsing
     while (quit_flag == 0)
     {
-        printf("[%c%d]> \n", sync_status, num_nodes);
+        char sync_symbol;
+        if (sync_status == 1)
+        {
+            sync_symbol = 's';
+        }
+        else
+        {
+            sync_symbol = '-';
+        }
+        printf("[%c%d]> ", sync_symbol, num_nodes);
         if (read(0, input_string, input_string_length) < 0)
         {
             printf("Unable to read input\n");
             return -1;
         }
 
-        char **inputs_list = parse_string(input_string, input_string_length);
-        if(!inputs_list)
+        char **sub_strings_list = parse_string(input_string, input_string_length);
+        if (!sub_strings_list)
         {
             printf("Unable to parse strings into inputs list\n");
             return -1;
         }
+
+        printf("\n");
+    }
+
+    if (quit_flag == 1)
+    {
+        // backup info and write to file
+
+        printf("Backing up blockchain...");
     }
 
     free(input_string);
+    // free hashmap and everything involved with it
     return 0;
 }
 
@@ -206,61 +240,82 @@ int my_strcmp(const char *s1, const char *s2)
     return 0;
 }
 
+char **parse_string(char *string, int string_length)
+{
+    int sub_strings_count = 0;
+    int in_word = 0;
 
-    char **parse_string(char *string, int string_length)
+    //how many substrings does the string contain
+    for (int i = 0; i < string_length; i++)
     {
-        int args_count = 0;
-        int in_word = 0;
-
-        for (int i = 0; i < string_length; i++)
+        if (string[i] != ' ')
         {
-            if (string[i] != ' ')
+            if (!in_word)
             {
-                if (!in_word)
-                {
-                    in_word = 1;
-                    args_count++;
-                }
-            }
-            else
-            {
-                in_word = 0;
+                in_word = 1;
+                sub_strings_count++;
             }
         }
-
-        char ** inputs_list = malloc(args_count * sizeof(char *));
-        if(!inputs_list)
+        else
         {
-            printf("Unable to read input\n");
-            return NULL;
+            in_word = 0;
         }
-    
-
-        return inputs_list;
     }
 
-    /*
-    1)check if backing store exists, if so open it
-    otherwise open() and make sure read and write
-    but also with complete write over (trunc?)
+    //create array of empty strings
+    char **sub_strings_list = malloc(sub_strings_count * sizeof(char *));
+    if (!sub_strings_list)
+    {
+        printf("Unable to read input\n");
+        return NULL;
+    }
 
-    2) if backing store exists parse the serialized
-    input into the associated structs and build the
-    "objects/structs" from this info
+    for (int i = 0; i < sub_strings_count; i++)
+    {
+        sub_strings_list[i] = malloc((string_length + 1) * (sizeof(char)));
+    }
 
-    3)display prompt of [s0]>
-    from there they can call one of the functions
-    with typing in the string "add node 12". Remember
-    * means to apply to all, so delimit with space.
-    could use regex? or keep it simple. I then
-    parse this string and if formatted correctly,
-    splice it so that I can get the one - three arguments,
-    if they exist to plug into the associated function.
-    If there is an with input make sure to return
+    //fill each of the strings
+    int ss_idx = 0;             //substring index
+    for (int i = 0, j = 0; i < string_length, j < sub_strings_count; i++)
+    {
+        if(string[i] != ' ')
+        {
+            sub_strings_list[j][ss_idx] = string[i];
+            ss_idx++;
+        }
+        else
+        {
+            ss_idx = 0;
+            j++;
+        }
+    }
 
-    3) process based off each of the particular functions
+    return sub_strings_list;
+}
 
-    4) once completed gather the nodes and save them to
-    file by "Backing up the blockchain..."
+/*
+1)check if backing store exists, if so open it
+otherwise open() and make sure read and write
+but also with complete write over (trunc?)
 
-    */
+2) if backing store exists parse the serialized
+input into the associated structs and build the
+"objects/structs" from this info
+
+3)display prompt of [s0]>
+from there they can call one of the functions
+with typing in the string "add node 12". Remember
+* means to apply to all, so delimit with space.
+could use regex? or keep it simple, when space break add '\n' and use switch fn. I then
+parse this string and if formatted correctly,
+splice it so that I can get the one - three arguments,
+if they exist to plug into the associated function.
+If there is an with input make sure to return
+
+3) process based off each of the particular functions
+
+4) once completed gather the nodes and save them to
+file by "Backing up the blockchain..."
+
+*/
