@@ -288,22 +288,22 @@ int remove_block(ssize_t nid, ssize_t bid, Node **node_array, int *current_node_
             // if middle block or end block of block list
             while (current_block->next != NULL)
             {
-                Block *prev = current_block;                
+                Block *prev = current_block;
                 current_block = current_block->next;
-            
-            //if middle block 
-                if(current_block->block_id == bid && current_block->next != NULL)
+
+                // if middle block
+                if (current_block->block_id == bid && current_block->next != NULL)
                 {
                     prev->next = current_block->next;
                     free(current_block);
                     return 1;
                 }
-            // if end block of block list
-                else if(current_block->block_id == bid && current_block->next == NULL)
+                // if end block of block list
+                else if (current_block->block_id == bid && current_block->next == NULL)
                 {
                     prev->next = NULL;
                     free(current_block);
-                    return 1;    
+                    return 1;
                 }
             }
         }
@@ -321,14 +321,14 @@ int sort_node_array(Node **node_array, int *current_node_array_size)
 {
     // use bubble sort to flip nodes
     int len = *current_node_array_size;
-    
-    for(int i = 0; i < len; i++)
+
+    for (int i = 0; i < len; i++)
     {
-       for(int j = 0; j < len - i -1; j++) 
+        for (int j = 0; j < len - i - 1; j++)
         {
-            if(node_array[j]->node_id > node_array[j+1]->node_id)
+            if (node_array[j]->node_id > node_array[j + 1]->node_id)
             {
-                //swap elements
+                // swap elements
                 Node *temp = node_array[j];
                 node_array[j] = node_array[j + 1];
                 node_array[j + 1] = temp;
@@ -340,18 +340,19 @@ int sort_node_array(Node **node_array, int *current_node_array_size)
 
 int list_nodes(Node **node_array, int *current_node_array_size)
 {
-    if(!sort_node_array(node_array, *current_node_array_size))
+    if (!sort_node_array(node_array, *current_node_array_size))
     {
         printf("Unable to sort node_array");
         return -1;
-    } 
+    }
 
-    for(int i = 0; i < current_node_array_size; i++)
+    for (int i = 0; i < current_node_array_size; i++)
     {
         printf("%d\n", node_array[i]->node_id);
     }
     return 0;
 }
+
 /*ls -l >>> copy array & sort by id, copy back >>> then go down the ll within each;
 sort and return dynamic array
 12: 21
@@ -359,15 +360,15 @@ sort and return dynamic array
 */
 int list_nodes_blocks(Node **node_array, int *current_node_array_size)
 {
-    if(!sort_node_array(node_array, *current_node_array_size))
+    if (!sort_node_array(node_array, *current_node_array_size))
     {
         printf("Unable to sort node_array");
         return -1;
     }
-    for(int i = 0; i < current_node_array_size; i++)
+    for (int i = 0; i < current_node_array_size; i++)
     {
         printf("%d: ", node_array[i]->node_id);
-        while(node_array[i]->block_list->next == NULL)
+        while (node_array[i]->block_list->next == NULL)
         {
             printf("%d ", node_array[i]->block_list->block_id);
         }
@@ -376,17 +377,114 @@ int list_nodes_blocks(Node **node_array, int *current_node_array_size)
     return 0;
 }
 
+int check_unique(int bid, int block_numbers[], int array_size)
+{
+    int unique_flag = 1;
+
+    for (int i = 0; i < array_size; i++)
+    {
+        if (bid == block_numbers[i])
+        {
+            unique_flag = 0;
+            break;
+        }
+        else if (block_numbers[i] == 0)
+        {
+            break;
+        }
+    }
+
+    return unique_flag;
+}
+
 int sync_blockchain(Node **node_array, int *current_node_array_size)
 {
+    int block_numbers[INITIAL_NODE_ARRAY_SIZE];
+    int array_size = INITIAL_NODE_ARRAY_SIZE;
+
+    for (int i = 0; i < INITIAL_NODE_ARRAY_SIZE; i++)
+    {
+        block_numbers[i] = 0;
+    }
+
+    int block_idx = 0;
+
+    // put unique nids into array
+    for (int i = 0; i < *current_node_array_size; i++)
+    {
+        if (node_array[i] && node_array[i]->block_list)
+        {
+            Block *current = node_array[i]->block_list;
+            while (current->next != NULL)
+            {
+                if (check_unique(current->block_id, block_numbers, array_size))
+                {
+                    block_numbers[block_idx] = current->block_id;
+                    block_idx++;
+                }
+            }
+        }
+    }
+
+    //If no blocks exists to sync
+    if(block_numbers[0] == 0)
+    {
+        printf("No blocks exist to sync.\n");
+        //return gracefully
+        return 0;
+    }
+    
+    // sort array
+    for(int i = 0; i < array_size; i++)
+    {
+        for(int j = 0; j < array_size - i - 1; j++)
+        {
+            if(block_numbers[j] > block_numbers[j + 1])
+            {
+                // swap array elements
+                int temp = block_numbers[j];
+                block_numbers[j] = block_numbers[j + 1];
+                block_numbers[j + 1] = temp;
+            }
+        }
+    }
+
+    // create or overwrite node_list for each existing node
+    for(int i = 0; i < current_node_array_size; i++)
+    {
+        //LEFT OFF HERE APR.5 NEED TO HAVE INITIAL BLOCK ADDED AND THEN ADDITIONAL BLOCKS!!!
+        //node exists without node_list
+        if(node_array[i] && !node_array[i]->block_list)
+        {
+            //block_numbers[j] >>> until 0 create node
+            int j = 0; 
+            while(block_numbers[j] != 0)
+            {
+                Block *new_block = malloc(sizeof(Block));
+                if(!new_block)
+                {
+                    printf("Unable to allocate memory.\n");
+                    return -1;
+                }
+
+                new_block = node_array[i]->block_list;
+            }
+        }
+
+        //node exists and contains node_list
+        else if(node_array[i] && node_array[i]->block_list)
+        {
+
+        }
+    }
+
 
 }
 
-int serialize_blockchain(Node **node_array, int *current_node_array_size)
+int serialize_blockchain(int fd, Node **node_array, int *current_node_array_size)
 {
-
 }
 
-int deserialize_blockchain(Node **node_array, int *current_node_array_size)
+int deserialize_blockchain(int fd, Node **node_array, int *current_node_array_size)
 {
-
 }
