@@ -150,7 +150,7 @@ int remove_node(ssize_t nid, Node **node_array, int *current_node_array_size)
     // remove all nodes and associated blocks
     if (nid == '*')
     {
-        for (int i = 0; i < current_node_array_size; i++)
+        for (int i = 0; i < *current_node_array_size; i++)
         {
             if (node_array[i]->block_list)
             {
@@ -171,7 +171,7 @@ int remove_node(ssize_t nid, Node **node_array, int *current_node_array_size)
     // remove node and associated block
     else
     {
-        for (int i = 0; i < current_node_array_size; i++)
+        for (int i = 0; i < *current_node_array_size; i++)
         {
             if (node_array[i]->node_id == nid)
             {
@@ -206,7 +206,7 @@ int add_block(ssize_t nid, ssize_t bid, Node **node_array, int *current_node_arr
     if (nid == '*')
     {
         // if blocklist contains blocks
-        for (int i = 0; i < current_node_array_size; i++)
+        for (int i = 0; i < *current_node_array_size; i++)
         {
             if (node_array[i] && node_array[i]->block_list)
             {
@@ -231,7 +231,7 @@ int add_block(ssize_t nid, ssize_t bid, Node **node_array, int *current_node_arr
     // if nid
     int nid_found_flag = 0;
 
-    for (int i = 0; i < current_node_array_size; i++)
+    for (int i = 0; i < *current_node_array_size; i++)
     {
         // if block contains block list
         if (node_array[i]->node_id == nid && node_array[i]->block_list)
@@ -268,31 +268,125 @@ int add_block(ssize_t nid, ssize_t bid, Node **node_array, int *current_node_arr
 
 int remove_block(ssize_t nid, ssize_t bid, Node **node_array, int *current_node_array_size)
 {
-    //WHERE I LEFT OFF APRIL 4TH!!!
-
     // if nid
-    for (int i = 0; i < current_node_array_size; i++)
+    for (int i = 0; i < *current_node_array_size; i++)
     {
         // if block contains block list
         if (node_array[i]->node_id == nid && node_array[i]->block_list)
         {
-            Block *iterator = node_array[i]->block_list;
+            Block *current_block = node_array[i]->block_list;
 
-            while (iterator->next = NULL)
+            // if first block of the block list
+            if (current_block->block_id == bid)
             {
-                iterator = iterator->next;
+                node_array[i]->block_list = current_block->next;
+                free(current_block);
+
+                return 1;
             }
 
-            iterator->next = new_block;
-            break;
-        }
-
-        // if blocklist empty
-        else if (node_array[i]->node_id == nid && node_array[i]->block_list == NULL)
-        {
-            node_array[i]->block_list = new_block;
-            break;
+            // if middle block or end block of block list
+            while (current_block->next != NULL)
+            {
+                Block *prev = current_block;                
+                current_block = current_block->next;
+            
+            //if middle block 
+                if(current_block->block_id == bid && current_block->next != NULL)
+                {
+                    prev->next = current_block->next;
+                    free(current_block);
+                    return 1;
+                }
+            // if end block of block list
+                else if(current_block->block_id == bid && current_block->next == NULL)
+                {
+                    prev->next = NULL;
+                    free(current_block);
+                    return 1;    
+                }
+            }
         }
     }
+    // if block does not exist
+    error_message5();
+    return -1;
+}
+
+/*ls >>> copy array & sort by id >>> could put back in orginal array and then print out???
+12
+13
+*/
+int sort_node_array(Node **node_array, int *current_node_array_size)
+{
+    // use bubble sort to flip nodes
+    int len = *current_node_array_size;
+    
+    for(int i = 0; i < len; i++)
+    {
+       for(int j = 0; j < len - i -1; j++) 
+        {
+            if(node_array[j]->node_id > node_array[j+1]->node_id)
+            {
+                //swap elements
+                Node *temp = node_array[j];
+                node_array[j] = node_array[j + 1];
+                node_array[j + 1] = temp;
+            }
+        }
+    }
+    return 1;
+}
+
+int list_nodes(Node **node_array, int *current_node_array_size)
+{
+    if(!sort_node_array(node_array, *current_node_array_size))
+    {
+        printf("Unable to sort node_array");
+        return -1;
+    } 
+
+    for(int i = 0; i < current_node_array_size; i++)
+    {
+        printf("%d\n", node_array[i]->node_id);
+    }
     return 0;
+}
+/*ls -l >>> copy array & sort by id, copy back >>> then go down the ll within each;
+sort and return dynamic array
+12: 21
+13: 21
+*/
+int list_nodes_blocks(Node **node_array, int *current_node_array_size)
+{
+    if(!sort_node_array(node_array, *current_node_array_size))
+    {
+        printf("Unable to sort node_array");
+        return -1;
+    }
+    for(int i = 0; i < current_node_array_size; i++)
+    {
+        printf("%d: ", node_array[i]->node_id);
+        while(node_array[i]->block_list->next == NULL)
+        {
+            printf("%d ", node_array[i]->block_list->block_id);
+        }
+        printf("\n");
+    }
+    return 0;
+}
+
+int sync_blockchain(Node **node_array, int *current_node_array_size)
+{
+
+}
+
+int serialize_blockchain(Node **node_array, int *current_node_array_size)
+{
+
+}
+
+int deserialize_blockchain(Node **node_array, int *current_node_array_size)
+{
+
 }
