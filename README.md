@@ -7,6 +7,8 @@ TODO - What is the problem? And where is the challenge?
 ## Description
 TODO - How have you solved the problem?
 
+Simple implementation using arrays and linked lists at each node to link each of the blocks.
+
 ## Installation
 TODO - How to install your project? npm install? make? make re?
 

@@ -100,6 +100,13 @@ char **parse_string(const char *string, int string_length, int *num_tokens);
 int my_strcmp(const char *s1, const char *s2);
 void free_string_array(char **names, int num_names);
 void *my_memset(void *str, int c, size_t n);
+void error_message1();
+void error_message2();
+void error_message3();
+void error_message4();
+void error_message5();
+void error_message6();
+
 
 
 // may be better to build an API with hashmap and set functionality
@@ -121,13 +128,6 @@ void *my_memset(void *str, int c, size_t n);
 
 
 // int check_sync_status(Hashmap *map);
-
-// error_message1()
-// error_message2()
-// error_message3()
-// error_message4()
-// error_message5()
-// error_message6()
 
 
 
@@ -244,6 +244,13 @@ int main()
             printf("\n");
         }
 
+
+        /*use the if then logic to differentiate what commands to use
+        - are the numbers only for tokens_list[2] && tokens_list[3]
+
+
+        */
+
         const char *quit_string = "quit";
         if (my_strcmp(quit_string, tokens_list[0]) == 0)
             {
@@ -266,6 +273,36 @@ int main()
 
     // free node array and everything involved with it
     return 0;
+}
+
+void error_message1()
+{
+    printf("1: no more resources available on the computer\n");
+}
+
+void error_message2()
+{
+    printf("2: this node already exists\n");
+}
+
+void error_message3()
+{
+    printf("3: this block already exists\n");
+}
+
+void error_message4()
+{
+    printf("4: node doesn't eixst");
+}
+
+void error_message5()
+{
+    printf("5: block doesn't exist");
+}
+
+void error_message6()
+{
+    printf("6: command not found\n");
 }
 
 // frees pointers related to string array
