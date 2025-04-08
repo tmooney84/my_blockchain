@@ -4,10 +4,14 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <sys/stat.h>
-#include "my_blockchain.c" // only temporarily while building
+// #include "my_blockchain.c" // only temporarily while building
 
-#define INITIAL_NODE_ARRAY_SIZE 256
-#define ARRAY_EXPANSION_AMOUNT 256
+// #define INITIAL_NODE_ARRAY_SIZE 256
+// #define ARRAY_EXPANSION_AMOUNT 256
+
+#define INITIAL_NODE_ARRAY_SIZE 10
+#define ARRAY_EXPANSION_AMOUNT 10
+
 //***** NEED TO SET int* current_node_array_size = INITIAL_NODE_ARRAY_SIZE in runner file to be passed in */
 // if(!current_node_array_size)
 
@@ -22,7 +26,6 @@ typedef struct Node
     ssize_t node_id;
     Block *block_list;
 } Node;
-
 
 Node **build_node_array(int *current_node_array_size);
 Node *create_node();
@@ -41,13 +44,87 @@ int serialize_blockchain(int fd, Node **node_array, int *current_node_array_size
 int deserialize_blockchain(int fd, Node **node_array, int *current_node_array_size);
 int free_node_array(Node **node_array, int *current_node_array_size);
 int free_list(Block *head);
+int build_bid_numbers(int bid_numbers[], int bid_array_size, Node **node_array, int *current_node_array_size);
+int rebuild_node_array(Node **node_array, int *current_node_array_size, int bid_numbers[], int bid_array_size);
 
 
 
+//--------------------------------------------------------------
+void error_message1()
+{
+    printf("1: no more resources available on the computer\n");
+}
 
+void error_message2()
+{
+    printf("2: this node already exists\n");
+}
 
+void error_message3()
+{
+    printf("3: this block already exists\n");
+}
 
+void error_message4()
+{
+    printf("4: node doesn't eixst");
+}
 
+void error_message5()
+{
+    printf("5: block doesn't exist");
+}
+
+void error_message6()
+{
+    printf("6: command not found\n");
+}
+
+// frees pointers related to string array
+void free_string_array(char **names, int num_names)
+{
+    if (names == NULL)
+    {
+        return;
+    }
+
+    for (int i = 0; i < num_names; i++)
+    {
+        free(names[i]); // Free each dynamically allocated string
+    }
+
+    free(names);
+}
+
+int my_strcmp(const char *s1, const char *s2)
+{
+    for (int i = 0; s1[i] != '\0' || s2[i] != '\0'; i++)
+    {
+        if (s1[i] < s2[i])
+        {
+            return -1;
+        }
+        else if (s1[i] > s2[i])
+        {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+//---------------------------------------------------------------------
+
+void *my_memset(void *str, int c, size_t n)
+{
+    unsigned char *ptr = (unsigned char *)str;
+
+    for (size_t i = 0; i < n; i++)
+    {
+        ptr[i] = (unsigned char)c;
+    }
+
+    return str;
+}
 
 // array of pointers to nodes
 Node **build_node_array(int *current_node_array_size)
@@ -59,6 +136,18 @@ Node **build_node_array(int *current_node_array_size)
         return NULL;
     }
     my_memset(node_array, '\0', *current_node_array_size);
+
+    for (int i = 0; i < *current_node_array_size; i++)
+    {
+        node_array[i] = create_node();
+        if (node_array[i] == NULL)
+        {
+            printf("Unable to create node array");
+            return NULL;
+        }
+    }
+
+    return node_array;
 }
 
 // add node nid >>> go through the array check if it is in the array, if less than array size add to first null spot, if full
@@ -67,7 +156,7 @@ Node **build_node_array(int *current_node_array_size)
 Node *create_node()
 {
     Node *new_node = malloc(sizeof(Node));
-    if (new_node)
+    if (!new_node)
     {
         printf("Unable to allocate memory.\n");
         return NULL;
@@ -82,7 +171,7 @@ Node *create_node()
 Block *create_block()
 {
     Block *new_block = malloc(sizeof(Block));
-    if (new_block)
+    if (!new_block)
     {
         printf("Unable to allocate memory.\n");
         return NULL;
@@ -90,6 +179,8 @@ Block *create_block()
 
     new_block->block_id = 0;
     new_block->next = NULL;
+
+    return new_block;
 }
 
 int add_node(ssize_t nid, Node **node_array, int *current_node_array_size)
@@ -97,6 +188,7 @@ int add_node(ssize_t nid, Node **node_array, int *current_node_array_size)
     int node_exists_flag = 0;
     ssize_t open_element_num = -1;
 
+    // determine if node already exists
     for (int i = 0; i < *current_node_array_size; i++)
     {
         if (node_array[i]->node_id == nid)
@@ -106,6 +198,7 @@ int add_node(ssize_t nid, Node **node_array, int *current_node_array_size)
         else if (node_array[i]->node_id == 0)
         {
             open_element_num = i;
+            break;
         }
     }
 
@@ -115,28 +208,19 @@ int add_node(ssize_t nid, Node **node_array, int *current_node_array_size)
         return -1;
     }
 
-    Node *new_node = create_node();
-    if (!new_node)
-    {
-        printf("Unable to allocate memory.");
-        return -1;
-    }
-
-    new_node->node_id = nid;
-
     if (open_element_num >= 0)
     {
-        node_array[open_element_num] = new_node;
+        node_array[open_element_num]->node_id = nid;
     }
     else if (open_element_num == -1)
     {
-        if (!expand_node_array(node_array, *current_node_array_size))
+        if (!expand_node_array(node_array, current_node_array_size))
         {
             printf("Unable to expand node_array");
             return -1;
         }
 
-        node_array[*current_node_array_size - ARRAY_EXPANSION_AMOUNT] = new_node;
+        node_array[*current_node_array_size - ARRAY_EXPANSION_AMOUNT]->node_id = nid;
     }
 
     return 1;
@@ -152,6 +236,9 @@ int expand_node_array(Node **node_array, int *current_node_array_size)
         printf("Unable to allocate memory");
         for (int i = 0; i < old_size; i++)
         {
+
+            ///
+            free(node_array[i]->block_list);
             free(node_array[i]);
         }
         free(node_array);
@@ -172,7 +259,6 @@ int expand_node_array(Node **node_array, int *current_node_array_size)
 
 int remove_node(ssize_t nid, Node **node_array, int *current_node_array_size)
 {
-    int node_found = 0;
     // remove all nodes and associated blocks
     if (nid == '*')
     {
@@ -228,6 +314,9 @@ int add_block(ssize_t nid, ssize_t bid, Node **node_array, int *current_node_arr
     {
         return -1;
     }
+
+    new_block->block_id = bid;
+
     // if nid *
     if (nid == '*')
     {
@@ -238,7 +327,7 @@ int add_block(ssize_t nid, ssize_t bid, Node **node_array, int *current_node_arr
             {
                 Block *iterator = node_array[i]->block_list;
 
-                while (iterator->next = NULL)
+                while (iterator->next == NULL)
                 {
                     iterator = iterator->next;
                 }
@@ -260,28 +349,29 @@ int add_block(ssize_t nid, ssize_t bid, Node **node_array, int *current_node_arr
     for (int i = 0; i < *current_node_array_size; i++)
     {
         // if block contains block list
-        if (node_array[i]->node_id == nid && node_array[i]->block_list)
+        if (node_array[i]->node_id == nid)
         {
             nid_found_flag = 1;
-            Block *iterator = node_array[i]->block_list;
 
-            while (iterator->next = NULL)
+            if(node_array[i]->block_list == NULL)
+            {
+                node_array[i]->block_list = new_block;
+            }
+
+            else
+            {
+                Block *iterator = node_array[i]->block_list;
+ 
+            while (iterator->next != NULL)
             {
                 iterator = iterator->next;
             }
 
             iterator->next = new_block;
+            
+            }
             break;
-        }
-
-        // if blocklist empty
-        else if (node_array[i]->node_id == nid && node_array[i]->block_list == NULL)
-        {
-
-            nid_found_flag = 1;
-            node_array[i]->block_list = new_block;
-            break;
-        }
+       }
     }
     if (nid_found_flag == 0)
     {
@@ -352,7 +442,9 @@ int sort_node_array(Node **node_array, int *current_node_array_size)
     {
         for (int j = 0; j < len - i - 1; j++)
         {
-            if (node_array[j]->node_id > node_array[j + 1]->node_id)
+            ssize_t id1 = node_array[j]->node_id;
+            ssize_t id2 = node_array[j + 1]->node_id;
+            if ((id1 == 0 && id2 != 0) || (id1 != 0 && id2 != 0 && id1 > id2))
             {
                 // swap elements
                 Node *temp = node_array[j];
@@ -366,15 +458,20 @@ int sort_node_array(Node **node_array, int *current_node_array_size)
 
 int list_nodes(Node **node_array, int *current_node_array_size)
 {
-    if (!sort_node_array(node_array, *current_node_array_size))
+    if (!sort_node_array(node_array, current_node_array_size))
     {
         printf("Unable to sort node_array");
         return -1;
     }
 
-    for (int i = 0; i < current_node_array_size; i++)
+    for (int i = 0; i < *current_node_array_size; i++)
     {
-        printf("%d\n", node_array[i]->node_id);
+        if(node_array[i]->node_id == 0)
+        {
+            continue;
+        }
+
+        printf("%ld\n", node_array[i]->node_id);
     }
     return 0;
 }
@@ -386,17 +483,26 @@ sort and return dynamic array
 */
 int list_nodes_blocks(Node **node_array, int *current_node_array_size)
 {
-    if (!sort_node_array(node_array, *current_node_array_size))
+    if (!sort_node_array(node_array, current_node_array_size))
     {
         printf("Unable to sort node_array");
         return -1;
     }
-    for (int i = 0; i < current_node_array_size; i++)
+
+    for (int i = 0; i < *current_node_array_size; i++)
     {
-        printf("%d: ", node_array[i]->node_id);
-        while (node_array[i]->block_list->next == NULL)
+        if(node_array[i]->node_id == 0)
         {
-            printf("%d ", node_array[i]->block_list->block_id);
+            continue;
+        }
+
+        printf("%ld: ", node_array[i]->node_id);
+        Block *current = node_array[i]->block_list;
+
+        while (current != NULL)
+        {
+            printf("%ld ", current->block_id);
+            current = current->next;
         }
         printf("\n");
     }
@@ -435,40 +541,40 @@ int sync_blockchain(Node **node_array, int *current_node_array_size)
 
     // put unique nids into array  !!!PUT INTO ITS OWN FUNCTION!!!
     //------------------------------------
-    int block_idx = 0;
 
-    for (int i = 0; i < *current_node_array_size; i++)
+    build_bid_numbers(bid_numbers, bid_array_size, node_array, current_node_array_size);
+
+    sort_node_array(node_array, current_node_array_size);
+
+    rebuild_node_array(node_array, current_node_array_size, bid_numbers, bid_array_size);
+
+    return 0;
+}
+
+int build_bid_numbers(int bid_numbers[], int bid_array_size, Node **node_array, int *current_node_array_size)
     {
-        if (node_array[i] && node_array[i]->block_list)
+        int block_idx = 0;
+
+        for (int i = 0; i < *current_node_array_size; i++)
         {
-            Block *current = node_array[i]->block_list;
-            while (current->next != NULL)
+            if (node_array[i]->node_id != 0 && node_array[i]->block_list)
             {
-                if (check_unique(current->block_id, bid_numbers, bid_array_size))
+                Block *current = node_array[i]->block_list;
+                while (current->next != NULL)
                 {
-                    bid_numbers[block_idx] = current->block_id;
-                    block_idx++;
+                    if (check_unique(current->block_id, bid_numbers, bid_array_size))
+                    {
+                        bid_numbers[block_idx] = current->block_id;
+                        block_idx++;
+                    }
                 }
             }
         }
-    }
-    //------------------------------------
-
-    // sort array !!!PUT INTO ITS OWN FUNCTION!!!
-    for (int i = 0; i < bid_array_size; i++)
-    {
-        for (int j = 0; j < bid_array_size - i - 1; j++)
-        {
-            if (bid_numbers[j] > bid_numbers[j + 1])
-            {
-                // swap array elements
-                int temp = bid_numbers[j];
-                bid_numbers[j] = bid_numbers[j + 1];
-                bid_numbers[j + 1] = temp;
-            }
-        }
+        return 0;
     }
 
+int rebuild_node_array(Node **node_array, int *current_node_array_size, int bid_numbers[], int bid_array_size)
+{
     // If no blocks exists to sync
     if (bid_numbers[0] == 0)
     {
@@ -478,22 +584,21 @@ int sync_blockchain(Node **node_array, int *current_node_array_size)
     }
 
     // clear and rebuild node_array with synced blocks
-    for (int i = 0; i < current_node_array_size; i++)
+    for (int i = 0; i < *current_node_array_size; i++)
     {
         // if node array doesn't exist
-        if (node_array[i]->block_list == NULL)
+        if (node_array[i]->node_id == 0)
         {
             continue;
         }
 
         // if node array exists
-        else if (node_array[i]->block_list != NULL)
+        else if (node_array[i]->node_id != 0)
         {
-            //clear list
+            // clear list
             free_list(node_array[i]->block_list);
-            
-            // add blocks to list !!!PUT INTO ITS OWN FUNCTION!!!
-            //-------------------------------------------------------------
+
+            // add blocks to list
             Block *current = node_array[i]->block_list;
 
             for (int j = 0; bid_numbers[j] != 0 && j < bid_array_size; j++)
@@ -510,10 +615,14 @@ int sync_blockchain(Node **node_array, int *current_node_array_size)
 
                 current->next = new_block;
             }
-            //----------------------------------------------------------------
         }
     }
+
+    return 0;
 }
+
+
+
 
 // int serialize_blockchain(int fd, Node **node_array, int *current_node_array_size)
 // {
@@ -523,6 +632,10 @@ int sync_blockchain(Node **node_array, int *current_node_array_size)
 // {
 // }
 
+
+
+
+
 // free node array
 int free_node_array(Node **node_array, int *current_node_array_size)
 {
@@ -530,7 +643,7 @@ int free_node_array(Node **node_array, int *current_node_array_size)
     {
         return 0;
     }
-    for (int i = 0; i < current_node_array_size; i++)
+    for (int i = 0; i < *current_node_array_size; i++)
     {
         // if node array doesn't exist
         if (node_array[i]->block_list == NULL)
@@ -542,42 +655,62 @@ int free_node_array(Node **node_array, int *current_node_array_size)
         else if (node_array[i]->block_list != NULL)
         {
             free_list(node_array[i]->block_list);
-       }
+        }
     }
     free(node_array);
     return 0;
 }
 
 int free_list(Block *head)
-            {
-                Block *current = head;
-            while (current != NULL)
-            {
-                Block *next = current->next;
-                free(current); 
-                current = current->next;
-            }
+{
+    if (head == NULL)
+    {
+        return 1;
+    }
 
-            return 1;
-            }
+    Block *current = head;
+    while (current != NULL)
+    {
+        Block *next = current->next;
+        free(current);
+        current = next;
+    }
+
+    return 1;
+}
 
 int main()
 {
-    int *current_node_array_size = INITIAL_NODE_ARRAY_SIZE;
-    Node **node_array = build_node_array(*current_node_array_size);
+    int *current_node_array_size = malloc(sizeof(int));
+    if (!current_node_array_size)
+    {
+        printf("Error building node array.\n");
+        return -1;
+    }
+    *current_node_array_size = INITIAL_NODE_ARRAY_SIZE;
+    Node **node_array = build_node_array(current_node_array_size);
     if (!node_array)
     {
         printf("Error building node array.\n");
         return -1;
     }
-    my_memset(node_array, 0, current_node_array_size);
 
-    add_node(10, node_array, *current_node_array_size);
-    add_node(11, node_array, *current_node_array_size);
-    add_node(12, node_array, *current_node_array_size);
+    add_node(10, node_array, current_node_array_size);
+    add_node(11, node_array, current_node_array_size);
+    add_node(12, node_array, current_node_array_size);
+    add_node(7, node_array, current_node_array_size);
 
-    list_nodes(node_array, *current_node_array_size);
+    add_block(10, 3322, node_array, current_node_array_size);
+    add_block(10, 9955, node_array, current_node_array_size);
+    add_block(10, 1166, node_array, current_node_array_size);
+    add_block(10, 5577, node_array, current_node_array_size);
 
+    
+
+    list_nodes(node_array, current_node_array_size);
+    printf("--------------------------------------\n");
+    list_nodes_blocks(node_array, current_node_array_size);
+    
     free(current_node_array_size);
     return 0;
 }
