@@ -9,6 +9,9 @@
 // #define INITIAL_NODE_ARRAY_SIZE 256
 // #define ARRAY_EXPANSION_AMOUNT 256
 
+#define INPUT_STRING_LENGTH 40 // ************************JUST FOR TESTING ************Maximum number of characters in the string (excluding the null terminator)
+
+
 #define INITIAL_NODE_ARRAY_SIZE 10
 #define ARRAY_EXPANSION_AMOUNT 10
 
@@ -33,7 +36,7 @@ Block *create_block();
 int add_node(ssize_t nid, Node **node_array, int *current_node_array_size);
 int expand_node_array(Node **node_array, int *current_node_array_size);
 int remove_node(ssize_t nid, Node **node_array, int *current_node_array_size);
-int add_block(ssize_t nid, ssize_t bid, Node **node_array, int *current_node_array_size);
+int add_block(char *nid, ssize_t bid, Node **node_array, int *current_node_array_size);
 int remove_block(ssize_t nid, ssize_t bid, Node **node_array, int *current_node_array_size);
 int sort_node_array(Node **node_array, int *current_node_array_size);
 int list_nodes(Node **node_array, int *current_node_array_size);
@@ -46,6 +49,7 @@ int free_node_array(Node **node_array, int *current_node_array_size);
 int free_list(Block *head);
 int build_bid_numbers(int bid_numbers[], int bid_array_size, Node **node_array, int *current_node_array_size);
 int rebuild_node_array(Node **node_array, int *current_node_array_size, int bid_numbers[], int bid_array_size);
+ssize_t parse_ssize_t(char *string, int str_len)
 
 
 
@@ -307,7 +311,7 @@ int remove_node(ssize_t nid, Node **node_array, int *current_node_array_size)
     // also need to use error_massage4() if the node doesn't exist
 }
 
-int add_block(ssize_t nid, ssize_t bid, Node **node_array, int *current_node_array_size)
+int add_block(char *nid, ssize_t bid, Node **node_array, int *current_node_array_size)
 {
     Block *new_block = create_block();
     if (!new_block)
@@ -318,7 +322,7 @@ int add_block(ssize_t nid, ssize_t bid, Node **node_array, int *current_node_arr
     new_block->block_id = bid;
 
     // if nid *
-    if (nid == '*')
+    if (nid[0] == '*' && nid[1] == '\0')
     {
         // if blocklist contains blocks
         for (int i = 0; i < *current_node_array_size; i++)
@@ -344,6 +348,11 @@ int add_block(ssize_t nid, ssize_t bid, Node **node_array, int *current_node_arr
     }
 
     // if nid
+    int str_len = (int)INPUT_STRING_LENGTH; //*************TEMPORARY WHILE TESTING *************** */
+    ssize_t bid_num = parse_ssize_t(bid, str_len);
+    ///////////////////////////////////////////////where I left of Apr. 7 
+    
+
     int nid_found_flag = 0;
 
     for (int i = 0; i < *current_node_array_size; i++)
@@ -381,6 +390,23 @@ int add_block(ssize_t nid, ssize_t bid, Node **node_array, int *current_node_arr
 
     return 0;
 }
+
+ssize_t parse_ssize_t(char *string, int str_len)
+    {
+        ssize_t num = 0;
+
+        for(int i = 0; i < str_len; i++)
+        {
+            if(string[i] < '0' || string[i] > '9')
+            {
+                return -1;
+            }
+
+            num = num * 10 + (string[i] - '0');
+        }
+        return num;
+    }
+
 
 int remove_block(ssize_t nid, ssize_t bid, Node **node_array, int *current_node_array_size)
 {
@@ -704,9 +730,20 @@ int main()
     add_block(10, 9955, node_array, current_node_array_size);
     add_block(10, 1166, node_array, current_node_array_size);
     add_block(10, 5577, node_array, current_node_array_size);
-
+ 
+    //need to change the input for this to be a string and for 
+    //each of the other input functions as well
+    
+    //add_block(*, 9999, node_array, current_node_array_size);
     
 
+    list_nodes(node_array, current_node_array_size);
+    
+    printf("--------------------------------------\n");
+   
+    //!!!!!!!!!!!!!this is causing a large number and then a segfault
+    remove_node(7, node_array, current_node_array_size);
+    
     list_nodes(node_array, current_node_array_size);
     printf("--------------------------------------\n");
     list_nodes_blocks(node_array, current_node_array_size);
