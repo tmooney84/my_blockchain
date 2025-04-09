@@ -600,9 +600,6 @@ int sync_blockchain(Node **node_array, int *current_node_array_size)
         bid_numbers[i] = 0;
     }
 
-    // put unique nids into array  !!!PUT INTO ITS OWN FUNCTION!!!
-    //------------------------------------
-
     build_bid_numbers(bid_numbers, bid_array_size, node_array, current_node_array_size);
 
     sort_node_array(node_array, current_node_array_size);
@@ -621,13 +618,15 @@ int build_bid_numbers(int bid_numbers[], int bid_array_size, Node **node_array, 
         if (node_array[i]->node_id != 0 && node_array[i]->block_list)
         {
             Block *current = node_array[i]->block_list;
-            while (current->next != NULL)
+            while (current != NULL)
             {
                 if (check_unique(current->block_id, bid_numbers, bid_array_size))
                 {
                     bid_numbers[block_idx] = current->block_id;
                     block_idx++;
                 }
+
+                current = current->next;
             }
         }
     }
@@ -654,27 +653,39 @@ int rebuild_node_array(Node **node_array, int *current_node_array_size, int bid_
         }
 
         // if node array exists
-        else if (node_array[i]->node_id != 0)
+        else if(node_array[i]->node_id != 0)
         {
             // clear list
             free_list(node_array[i]->block_list);
+            node_array[i]->block_list = NULL;
 
             // add blocks to list
-            Block *current = node_array[i]->block_list;
+            //Block *current = node_array[i]->block_list;
+            Block *current = NULL;
+
 
             for (int j = 0; bid_numbers[j] != 0 && j < bid_array_size; j++)
             {
                 // set node info
                 Block *new_block = create_block();
-                new_block->block_id = bid_numbers[j];
-
-                // add node
-                while (current->next != NULL)
+                if(!new_block)
                 {
-                    current = current->next;
+                    printf("Failure to allocate memory.\n");
+                    return -1;
                 }
 
+                new_block->block_id = bid_numbers[j];
+                
+                if(node_array[i]->block_list == NULL)
+                {
+                    node_array[i]->block_list = new_block;
+                    current = new_block;
+                }
+               else{
                 current->next = new_block;
+                current = new_block;
+               } 
+                
             }
         }
     }
@@ -805,6 +816,12 @@ int main()
 
     list_nodes(node_array, current_node_array_size);
     printf("--------------------------------------\n");
+    list_nodes_blocks(node_array, current_node_array_size);
+
+    printf("--------------------------------------\n");
+
+    sync_blockchain(node_array, current_node_array_size);
+
     list_nodes_blocks(node_array, current_node_array_size);
 
     free(current_node_array_size);
