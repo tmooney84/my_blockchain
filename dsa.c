@@ -386,6 +386,7 @@ int add_block(char *nid, char *bid, Node **node_array, int *current_node_array_s
                 {
                     return -1;
                 }
+                new_block->block_id = bid_num;
 
                 if (node_array[i]->block_list == NULL)
                 {
