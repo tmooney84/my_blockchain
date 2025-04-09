@@ -106,6 +106,7 @@ void error_message3();
 void error_message4();
 void error_message5();
 void error_message6();
+void ok_computer();
 
 
 
@@ -244,6 +245,23 @@ int main()
             printf("\n");
         }
 
+        /*
+        if (remove_node() == -1)
+        {
+            error_message4(); 
+        }        
+        else
+        {
+            ok_computer(); 
+        } 
+
+        */
+
+        //rm node nid
+        
+        //***MAKE SURE TO USE ok_computer() fn after doing command ***//
+
+
 
         /*use the if then logic to differentiate what commands to use
         - are the numbers only for tokens_list[2] && tokens_list[3]
@@ -292,17 +310,22 @@ void error_message3()
 
 void error_message4()
 {
-    printf("4: node doesn't eixst");
+    printf("4: node doesn't exist\n");
 }
 
 void error_message5()
 {
-    printf("5: block doesn't exist");
+    printf("5: block doesn't exist\n");
 }
 
 void error_message6()
 {
     printf("6: command not found\n");
+}
+
+void ok_computer()
+{
+    printf("OK\n");
 }
 
 // frees pointers related to string array
