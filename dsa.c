@@ -13,8 +13,8 @@
 
 #define INPUT_STRING_LENGTH 40 // ************************JUST FOR TESTING ************Maximum number of characters in the string (excluding the null terminator)
 
-#define INITIAL_NODE_ARRAY_SIZE 10
-#define ARRAY_EXPANSION_AMOUNT 10
+#define INITIAL_NODE_ARRAY_SIZE 16
+#define ARRAY_EXPANSION_AMOUNT 16
 
 //***** NEED TO SET int* current_node_array_size = INITIAL_NODE_ARRAY_SIZE in runner file to be passed in */
 // if(!current_node_array_size)
@@ -44,8 +44,8 @@ int list_nodes(Node **node_array, int *current_node_array_size);
 int list_nodes_blocks(Node **node_array, int *current_node_array_size);
 int check_unique(ssize_t bid_num, int bid_numbers[], int array_size);
 int sync_blockchain(Node **node_array, int *current_node_array_size);
-int serialize_blockchain(int fd, Node **node_array, int *current_node_array_size);
-Node **deserialize_blockchain(int fd, Node **node_array, int *current_node_array_size);
+int save_blockchain_data(int fd, Node **node_array, int *current_node_array_size);
+Node **load_blockchain_data(int fd, int *current_node_array_size);
 int free_node_array(Node **node_array, int *current_node_array_size);
 int free_list(Block *head);
 int build_bid_numbers(int bid_numbers[], int bid_array_size, Node **node_array, int *current_node_array_size);
@@ -690,7 +690,7 @@ int rebuild_node_array(Node **node_array, int *current_node_array_size, int bid_
     return 0;
 }
 
-int serialize_blockchain(int fd, Node **node_array, int *current_node_array_size)
+int save_blockchain_data(int fd, Node **node_array, int *current_node_array_size)
 {
     if (!fd)
     {
@@ -722,17 +722,18 @@ int serialize_blockchain(int fd, Node **node_array, int *current_node_array_size
     return 1;
 }
 
-Node **deserialize_blockchain(int fd, Node **node_array, int *current_node_array_size)
+Node **load_blockchain_data(int fd, int *current_node_array_size)
 {
+    lseek(fd, 0, SEEK_SET);
     // read number of nodes
     if (read(fd, current_node_array_size, sizeof(int)) != sizeof(int))
     {
         printf("Unable to read file.\n");
-        return -1;
+        return NULL;
     }
 
     // build node_array
-    Node **node_array = build_node_array(*current_node_array_size);
+    Node **node_array = build_node_array(current_node_array_size);
 
     for (int i = 0; i < *current_node_array_size; i++)
     {
@@ -741,7 +742,7 @@ Node **deserialize_blockchain(int fd, Node **node_array, int *current_node_array
         {
             perror("Failed to read node_id");
             free(node_array);
-            return -1;
+            return NULL;
         }
 
         Block *head = NULL;
@@ -749,7 +750,7 @@ Node **deserialize_blockchain(int fd, Node **node_array, int *current_node_array
 
         int flag;
 
-        while (read(fd, &flag, sizeof(int) == sizeof(int)))
+        while (read(fd, &flag, sizeof(int)) == sizeof(int))
         {
             if (flag == 0)
                 break; // end of block list
@@ -761,7 +762,7 @@ Node **deserialize_blockchain(int fd, Node **node_array, int *current_node_array
             {
                 printf("Failure to read block_id");
                 free(node_array);
-                return -1;
+                return NULL;
             }
 
             // create new block
@@ -769,7 +770,7 @@ Node **deserialize_blockchain(int fd, Node **node_array, int *current_node_array
             if (!new_block)
             {
                 printf("Unable to create new block.\n");
-                return -1;
+                return NULL;
             }
 
             new_block->block_id = block_id;
@@ -784,6 +785,8 @@ Node **deserialize_blockchain(int fd, Node **node_array, int *current_node_array
                 tail = new_block;
             }
         }
+        //attach block_list to node
+        node_array[i]->block_list = head;
     }
     return node_array;
 }
@@ -848,7 +851,7 @@ int main()
     }
 
     char *node1 = malloc((INPUT_STRING_LENGTH + 1) * sizeof(char));
-    strncpy(node1, "10", INPUT_STRING_LENGTH + 1);
+    strncpy(node1, "14", INPUT_STRING_LENGTH + 1);
     char *node2 = malloc((INPUT_STRING_LENGTH + 1) * sizeof(char));
     strncpy(node2, "11", INPUT_STRING_LENGTH + 1);
     char *node3 = malloc((INPUT_STRING_LENGTH + 1) * sizeof(char));
@@ -860,17 +863,17 @@ int main()
     strncpy(node_ast, "*", INPUT_STRING_LENGTH + 1);
 
     char *block1 = malloc((INPUT_STRING_LENGTH + 1) * sizeof(char));
-    strncpy(block1, "3322", INPUT_STRING_LENGTH + 1);
+    strncpy(block1, "2", INPUT_STRING_LENGTH + 1);
     char *block2 = malloc((INPUT_STRING_LENGTH + 1) * sizeof(char));
-    strncpy(block2, "9955", INPUT_STRING_LENGTH + 1);
+    strncpy(block2, "16", INPUT_STRING_LENGTH + 1);
     char *block3 = malloc((INPUT_STRING_LENGTH + 1) * sizeof(char));
-    strncpy(block3, "1166", INPUT_STRING_LENGTH + 1);
+    strncpy(block3, "32", INPUT_STRING_LENGTH + 1);
     char *block4 = malloc((INPUT_STRING_LENGTH + 1) * sizeof(char));
-    strncpy(block4, "5577", INPUT_STRING_LENGTH + 1);
+    strncpy(block4, "64", INPUT_STRING_LENGTH + 1);
     char *block5 = malloc((INPUT_STRING_LENGTH + 1) * sizeof(char));
-    strncpy(block5, "3333", INPUT_STRING_LENGTH + 1);
+    strncpy(block5, "100", INPUT_STRING_LENGTH + 1);
     char *block6 = malloc((INPUT_STRING_LENGTH + 1) * sizeof(char));
-    strncpy(block6, "4444", INPUT_STRING_LENGTH + 1);
+    strncpy(block6, "1024", INPUT_STRING_LENGTH + 1);
 
     add_node(node1, node_array, current_node_array_size);
     add_node(node2, node_array, current_node_array_size);
@@ -911,6 +914,40 @@ int main()
 
     list_nodes_blocks(node_array, current_node_array_size);
 
+    int fd;
+   // struct stat file_stats;
+   // int fileExists = 0;
+
+    // if (stat("backup.txt", &file_stats) == 0)
+    // {
+    //     fileExists = 1;
+    // }
+
+    //need to explicitly manage the file overwrite when storing blockchain to file
+    fd = open("backup.txt", O_RDWR | O_CREAT, 0666);
+    if (fd == -1)
+    {
+        printf("error opening file\n");
+        return -1;
+    }
+
+
+
+    
+    save_blockchain_data(fd, node_array, current_node_array_size);
+
+    Node **new_chain = load_blockchain_data(fd, current_node_array_size);
+    if(!new_chain)
+    {
+        printf("Unable to build blockchain");
+        return 0;
+    }
+
+    printf("--------------------------------------\n");
+    printf("Re-loaded Data: \n");
+    list_nodes_blocks(new_chain, current_node_array_size);
+
     free(current_node_array_size);
+    close(fd);
     return 0;
 }
