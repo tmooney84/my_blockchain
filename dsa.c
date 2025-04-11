@@ -51,6 +51,8 @@ int free_list(Block *head);
 int *build_bid_numbers(int bid_array_size, Node **node_array, int *current_node_array_size);
 int rebuild_node_array(Node **node_array, int *current_node_array_size, int bid_numbers[], int bid_array_size);
 ssize_t parse_ssize_t(char *string, int str_len);
+int check_sync_status(Node **node_array, int *current_node_array_size);
+
 
 //--------------------------------------------------------------
 void error_message1()
