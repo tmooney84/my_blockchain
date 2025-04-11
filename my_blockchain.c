@@ -90,6 +90,7 @@
 #include <stddef.h>
 #include <string.h>
 
+#include "dsa.c"
 
 
 #define HASH_SIZE 256
@@ -151,6 +152,9 @@ void ok_computer();
 
 int main()
 {
+    int *current_node_array_size = malloc(sizeof(int));
+    *current_node_array_size = (int)INITIAL_NODE_ARRAY_SIZE;
+
     int fd;
     struct stat file_stats;
     int fileExists = 0;
@@ -170,11 +174,16 @@ int main()
 
     if (fileExists == 1)
     {
-        // deserialize file and bring up structs
+       Node ** node_array = load_blockchain_data(fd, current_node_array_size); 
+        if(!node_array)
+        {
+            printf("Unable to load blockchain data from file.");
+            return -1;
+        }
     }
 
     // else just chill and save to stuff later
-
+    int sync_status = check_sync_status(node_array, current_node_array_size);
     // int sync_status = check_sync_status(map);
     int sync_status = 1; // by default or if
     // checking through the file can confirm synced
@@ -290,6 +299,8 @@ int main()
     }
 
     // free node array and everything involved with it
+
+    free(current_node_array_size);
     return 0;
 }
 

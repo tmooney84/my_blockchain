@@ -48,7 +48,7 @@ int save_blockchain_data(int fd, Node **node_array, int *current_node_array_size
 Node **load_blockchain_data(int fd, int *current_node_array_size);
 int free_node_array(Node **node_array, int *current_node_array_size);
 int free_list(Block *head);
-int build_bid_numbers(int bid_numbers[], int bid_array_size, Node **node_array, int *current_node_array_size);
+int *build_bid_numbers(int bid_array_size, Node **node_array, int *current_node_array_size);
 int rebuild_node_array(Node **node_array, int *current_node_array_size, int bid_numbers[], int bid_array_size);
 ssize_t parse_ssize_t(char *string, int str_len);
 
@@ -590,25 +590,39 @@ int check_unique(ssize_t bid_num, int bid_numbers[], int array_size)
 
 int sync_blockchain(Node **node_array, int *current_node_array_size)
 {
-    int bid_numbers[INITIAL_NODE_ARRAY_SIZE];
+    // arbitary size
     int bid_array_size = INITIAL_NODE_ARRAY_SIZE;
+
+    int *bid_numbers = build_bid_numbers(bid_array_size, node_array, current_node_array_size);
+    if (!bid_numbers)
+    {
+        printf("Unable to sync blockchain.\n");
+        return -1;
+    }
+
+    sort_node_array(node_array, current_node_array_size);
+
+    rebuild_node_array(node_array, current_node_array_size, bid_numbers, bid_array_size);
+
+    free(bid_numbers);
+
+    return 0;
+}
+
+int *build_bid_numbers(int bid_array_size, Node **node_array, int *current_node_array_size)
+{
+    int *bid_numbers = malloc(INITIAL_NODE_ARRAY_SIZE * sizeof(int));
+    if (!bid_numbers)
+    {
+        printf("Unable to allocate memory.\n");
+        return NULL;
+    }
 
     for (int i = 0; i < INITIAL_NODE_ARRAY_SIZE; i++)
     {
         bid_numbers[i] = 0;
     }
 
-    build_bid_numbers(bid_numbers, bid_array_size, node_array, current_node_array_size);
-
-    sort_node_array(node_array, current_node_array_size);
-
-    rebuild_node_array(node_array, current_node_array_size, bid_numbers, bid_array_size);
-
-    return 0;
-}
-
-int build_bid_numbers(int bid_numbers[], int bid_array_size, Node **node_array, int *current_node_array_size)
-{
     int block_idx = 0;
 
     for (int i = 0; i < *current_node_array_size; i++)
@@ -628,7 +642,7 @@ int build_bid_numbers(int bid_numbers[], int bid_array_size, Node **node_array, 
             }
         }
     }
-    return 0;
+    return bid_numbers;
 }
 
 int rebuild_node_array(Node **node_array, int *current_node_array_size, int bid_numbers[], int bid_array_size)
@@ -785,10 +799,89 @@ Node **load_blockchain_data(int fd, int *current_node_array_size)
                 tail = new_block;
             }
         }
-        //attach block_list to node
+        // attach block_list to node
         node_array[i]->block_list = head;
     }
     return node_array;
+}
+
+int check_sync_status(Node **node_array, int *current_node_array_size)
+{
+    // aggregating unique block id's within blockchain
+    int bid_array_size = INITIAL_NODE_ARRAY_SIZE;
+    int *bid_numbers = build_bid_numbers(bid_array_size, node_array, current_node_array_size);
+    if (!bid_numbers)
+    {
+        printf("Unable to sync blockchain.\n");
+        return -1;
+    }
+    int num_unique_bids = 0;
+
+    for (int i = 0; i < bid_array_size; i++)
+    {
+        if (bid_numbers[i] != 0)
+        {
+            num_unique_bids++;
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    // for testing
+    printf("$$$Num unique bids: %d\n", num_unique_bids);
+
+    // checking sync status of nodes
+    for (int i = 0; i < *current_node_array_size; i++)
+    {
+        //if all nodes empty and current node is empty of blocks
+        if(node_array[i]->node_id != 0 && node_array[i]->block_list == NULL && bid_numbers[0] == 0)
+        {
+            continue;
+        } 
+        
+        //current node is empty of blocks, but others are not
+        else if(node_array[i]->node_id != 0 && node_array[i]->block_list == NULL && bid_numbers[0] != 0)
+        {
+            free(bid_numbers);
+            return 0;
+        }
+
+        else if (node_array[i]->node_id != 0 && node_array[i]->block_list)
+        {
+            int contained_array[bid_array_size];
+            my_memset(contained_array, 0, bid_array_size);
+
+            Block *current = node_array[i]->block_list;
+            while (current != NULL)
+            {
+                for (int i = 0; i < num_unique_bids; i++)
+                {
+                    if (bid_numbers[i] == (int)current->block_id)
+                    {
+                        contained_array[i]++;
+                        break;
+                    }
+                }
+                // need to see if all the numbers in the bid_numbers array are
+                // part of each blocklist
+
+                current = current->next;
+            }
+            for (int i = 0; i < num_unique_bids; i++)
+            {
+                if (contained_array[i] == 0)
+                {
+                    free(bid_numbers);
+                    return 0;
+                }
+            }
+        }
+    }
+
+    free(bid_numbers);
+    return 1;
 }
 
 // free node array
@@ -912,18 +1005,23 @@ int main()
 
     sync_blockchain(node_array, current_node_array_size);
 
+    printf("--------------------------------------\n");
+    int sync_status = check_sync_status(node_array, current_node_array_size);
+
+    sync_status == 1 ? printf("Blockchain sync'd\n") : printf("Blockchain not sync'd\n");
+
     list_nodes_blocks(node_array, current_node_array_size);
 
     int fd;
-   // struct stat file_stats;
-   // int fileExists = 0;
+    // struct stat file_stats;
+    // int fileExists = 0;
 
     // if (stat("backup.txt", &file_stats) == 0)
     // {
     //     fileExists = 1;
     // }
 
-    //need to explicitly manage the file overwrite when storing blockchain to file
+    // need to explicitly manage the file overwrite when storing blockchain to file
     fd = open("backup.txt", O_RDWR | O_CREAT, 0666);
     if (fd == -1)
     {
@@ -931,13 +1029,10 @@ int main()
         return -1;
     }
 
-
-
-    
     save_blockchain_data(fd, node_array, current_node_array_size);
 
     Node **new_chain = load_blockchain_data(fd, current_node_array_size);
-    if(!new_chain)
+    if (!new_chain)
     {
         printf("Unable to build blockchain");
         return 0;
