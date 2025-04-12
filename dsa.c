@@ -1,55 +1,3 @@
-
-// #define INPUT_STRING_LENGTH 40
-
-// #include <stdlib.h>
-// #include <unistd.h>
-// #include <fcntl.h>
-// #include <stdio.h>
-// #include <sys/stat.h>
-
-// #include <string.h> //TEMPORARY WHILE TESTING!!!
-
-// #define INITIAL_NODE_ARRAY_SIZE 16
-// #define ARRAY_EXPANSION_AMOUNT 16
-
-// //***** NEED TO SET int* current_node_array_size = INITIAL_NODE_ARRAY_SIZE in runner file to be passed in */
-// // if(!current_node_array_size)
-
-// typedef struct Block
-// {
-//     ssize_t block_id;
-//     struct Block *next;
-// } Block;
-
-// typedef struct Node
-// {
-//     ssize_t node_id;
-//     Block *block_list;
-// } Node;
-
-// Node **build_node_array(int *current_node_array_size);
-// Node *create_node();
-// Block *create_block();
-// int calc_num_nodes(Node **node_array, int *current_node_array_size);
-// int add_node(char *nid, Node **node_array, int *current_node_array_size);
-// int expand_node_array(Node **node_array, int *current_node_array_size);
-// int remove_node(char *nid, Node **node_array, int *current_node_array_size);
-// int add_block(char *nid, char *bid, Node **node_array, int *current_node_array_size);
-// int remove_block(char *nid, char *bid, Node **node_array, int *current_node_array_size);
-// int sort_node_array(Node **node_array, int *current_node_array_size);
-// int list_nodes(Node **node_array, int *current_node_array_size);
-// int list_nodes_blocks(Node **node_array, int *current_node_array_size);
-// int check_unique(ssize_t bid_num, int bid_numbers[], int array_size);
-// int sync_blockchain(Node **node_array, int *current_node_array_size);
-// int save_blockchain_data(int fd, Node **node_array, int *current_node_array_size);
-// Node **load_blockchain_data(int fd, int *current_node_array_size);
-// int free_node_array(Node **node_array, int *current_node_array_size);
-// int free_list(Block *head);
-// int *build_bid_numbers(int bid_array_size, Node **node_array, int *current_node_array_size);
-// int rebuild_node_array(Node **node_array, int *current_node_array_size, int bid_numbers[], int bid_array_size);
-// ssize_t parse_ssize_t(char *string, int str_len);
-// int check_sync_status(Node **node_array, int *current_node_array_size);
-
 #include "dsa.h"
 
 void error_message1()
@@ -87,7 +35,6 @@ void ok_computer()
     printf("OK\n");
 }
 
-// frees pointers related to string array
 void free_string_array(char **names, int num_names)
 {
     if (names == NULL)
@@ -97,7 +44,7 @@ void free_string_array(char **names, int num_names)
 
     for (int i = 0; i < num_names; i++)
     {
-        free(names[i]); // Free each dynamically allocated string
+        free(names[i]); 
     }
 
     free(names);
@@ -232,9 +179,6 @@ Node **build_node_array(int *current_node_array_size)
     return node_array;
 }
 
-// add node nid >>> go through the array check if it is in the array, if less than array size add to first null spot, if full
-// resize array
-
 Node *create_node()
 {
     Node *new_node = malloc(sizeof(Node));
@@ -367,12 +311,11 @@ int remove_node(char *nid, Node **node_array, int *current_node_array_size)
             node_array[i]->block_list = NULL;
         }
     }
-    // make sure the id is a number string??? ...else if
 
     // remove node and associated block
     else
     {
-        int str_len = (int)INPUT_STRING_LENGTH; //*************TEMPORARY WHILE TESTING *************** */
+        int str_len = (int)INPUT_STRING_LENGTH; 
         ssize_t nid_num = parse_ssize_t(nid, str_len);
 
         for (int i = 0; i < *current_node_array_size; i++)
@@ -594,10 +537,6 @@ int remove_block(char *nid, char *bid, Node **node_array, int *current_node_arra
     return -1;
 }
 
-/*ls >>> copy array & sort by id >>> could put back in orginal array and then print out???
-12
-13
-*/
 int sort_node_array(Node **node_array, int *current_node_array_size)
 {
     // use bubble sort to flip nodes
@@ -641,11 +580,6 @@ int list_nodes(Node **node_array, int *current_node_array_size)
     return 0;
 }
 
-/*ls -l >>> copy array & sort by id, copy back >>> then go down the ll within each;
-sort and return dynamic array
-12: 21
-13: 21
-*/
 int list_nodes_blocks(Node **node_array, int *current_node_array_size)
 {
     if (!sort_node_array(node_array, current_node_array_size))
@@ -789,7 +723,6 @@ int rebuild_node_array(Node **node_array, int *current_node_array_size, int bid_
             node_array[i]->block_list = NULL;
 
             // add blocks to list
-            // Block *current = node_array[i]->block_list;
             Block *current = NULL;
 
             for (int j = 0; bid_numbers[j] != 0 && j < bid_array_size; j++)
@@ -946,10 +879,6 @@ int check_sync_status(Node **node_array, int *current_node_array_size)
         }
     }
 
-    // for testing //*********************************************** */
-    // printf("$$$Num unique bids: %d\n", num_unique_bids);
-    /********************************************************************* */
-
     // checking sync status of nodes
     for (int i = 0; i < *current_node_array_size; i++)
     {
@@ -1044,123 +973,3 @@ int free_list(Block *head)
 
     return 1;
 }
-
-// int main()
-// {
-//     int *current_node_array_size = malloc(sizeof(int));
-//     if (!current_node_array_size)
-//     {
-//         printf("Error building node array.\n");
-//         return -1;
-//     }
-//     *current_node_array_size = INITIAL_NODE_ARRAY_SIZE;
-//     Node **node_array = build_node_array(current_node_array_size);
-//     if (!node_array)
-//     {
-//         printf("Error building node array.\n");
-//         return -1;
-//     }
-
-//     char *node1 = malloc((INPUT_STRING_LENGTH + 1) * sizeof(char));
-//     strncpy(node1, "14", INPUT_STRING_LENGTH + 1);
-//     char *node2 = malloc((INPUT_STRING_LENGTH + 1) * sizeof(char));
-//     strncpy(node2, "11", INPUT_STRING_LENGTH + 1);
-//     char *node3 = malloc((INPUT_STRING_LENGTH + 1) * sizeof(char));
-//     strncpy(node3, "12", INPUT_STRING_LENGTH + 1);
-//     char *node4 = malloc((INPUT_STRING_LENGTH + 1) * sizeof(char));
-//     strncpy(node4, "7", INPUT_STRING_LENGTH + 1);
-
-//     char *node_ast = malloc((INPUT_STRING_LENGTH + 1) * sizeof(char));
-//     strncpy(node_ast, "*", INPUT_STRING_LENGTH + 1);
-
-//     char *block1 = malloc((INPUT_STRING_LENGTH + 1) * sizeof(char));
-//     strncpy(block1, "2", INPUT_STRING_LENGTH + 1);
-//     char *block2 = malloc((INPUT_STRING_LENGTH + 1) * sizeof(char));
-//     strncpy(block2, "16", INPUT_STRING_LENGTH + 1);
-//     char *block3 = malloc((INPUT_STRING_LENGTH + 1) * sizeof(char));
-//     strncpy(block3, "32", INPUT_STRING_LENGTH + 1);
-//     char *block4 = malloc((INPUT_STRING_LENGTH + 1) * sizeof(char));
-//     strncpy(block4, "64", INPUT_STRING_LENGTH + 1);
-//     char *block5 = malloc((INPUT_STRING_LENGTH + 1) * sizeof(char));
-//     strncpy(block5, "100", INPUT_STRING_LENGTH + 1);
-//     char *block6 = malloc((INPUT_STRING_LENGTH + 1) * sizeof(char));
-//     strncpy(block6, "1024", INPUT_STRING_LENGTH + 1);
-
-//     add_node(node1, node_array, current_node_array_size);
-//     add_node(node2, node_array, current_node_array_size);
-//     add_node(node3, node_array, current_node_array_size);
-//     add_node(node4, node_array, current_node_array_size);
-
-//     add_block(node1, block2, node_array, current_node_array_size);
-//     add_block(node1, block3, node_array, current_node_array_size);
-//     add_block(node1, block4, node_array, current_node_array_size);
-
-//     // need to change the input for this to be a string and for
-//     // each of the other input functions as well
-
-//     // add_block(*, 9999, node_array, current_node_array_size);
-
-//     list_nodes(node_array, current_node_array_size);
-
-//     printf("--------------------------------------\n");
-
-//     // remove_node(node_ast, node_array, current_node_array_size);
-
-//     add_block(node_ast, block5, node_array, current_node_array_size);
-
-//     list_nodes_blocks(node_array, current_node_array_size);
-
-//     printf("--------------------------------------\n");
-
-//     ///////when adding second array doesn't work, but does with one array
-//     add_block(node_ast, block6, node_array, current_node_array_size);
-
-//     list_nodes(node_array, current_node_array_size);
-//     printf("--------------------------------------\n");
-//     list_nodes_blocks(node_array, current_node_array_size);
-
-//     printf("--------------------------------------\n");
-
-//     sync_blockchain(node_array, current_node_array_size);
-
-//     printf("--------------------------------------\n");
-//     int sync_status = check_sync_status(node_array, current_node_array_size);
-
-//     sync_status == 1 ? printf("Blockchain sync'd\n") : printf("Blockchain not sync'd\n");
-
-//     list_nodes_blocks(node_array, current_node_array_size);
-
-//     int fd;
-//     // struct stat file_stats;
-//     // int fileExists = 0;
-
-//     // if (stat("backup.txt", &file_stats) == 0)
-//     // {
-//     //     fileExists = 1;
-//     // }
-
-//     // need to explicitly manage the file overwrite when storing blockchain to file
-//     fd = open("backup.txt", O_RDWR | O_CREAT, 0666);
-//     if (fd == -1)
-//     {
-//         printf("error opening file\n");
-//         return -1;
-//     }
-
-//     save_blockchain_data(fd, node_array, current_node_array_size);
-
-//     Node **new_chain = load_blockchain_data(fd, current_node_array_size);
-//     if (!new_chain)
-//     {
-//         printf("Unable to build blockchain");
-//         return 0;
-//     }
-
-//     printf("--------------------------------------\n");
-//     printf("Re-loaded Data: \n");
-//     list_nodes_blocks(new_chain, current_node_array_size);
-
-//     free(current_node_array_size);
-//     close(fd);
-//     return 0;
-// }
