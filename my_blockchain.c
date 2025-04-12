@@ -90,8 +90,9 @@
 #include <stddef.h>
 #include <string.h>
 
+/*************NEED TO CREATE dsa.h FILE!!!!*************************** */
 #include "dsa.c"
-
+/**************************************** */
 
 #define HASH_SIZE 256
 #define INPUT_STRING_LENGTH 40 // Maximum number of characters in the string (excluding the null terminator)
@@ -109,47 +110,6 @@ void error_message5();
 void error_message6();
 void ok_computer();
 
-
-
-// may be better to build an API with hashmap and set functionality
-
-// typedef struct Hashmap
-// {
-// }
-
-// add_node()
-// remove_node()
-// add_block()
-// remove_block()
-// list_all_blocks()
-// sync_blockchain()
-// quit_blockchain()
-
-
-
-
-
-// int check_sync_status(Hashmap *map);
-
-
-
-
-
-
-
-// add node nid
-
-// rm node nid
-
-// add block bid nid
-
-// rm block bid nid
-
-// ls list all nodes (ls -l)
-
-// sync
-// quit
-
 int main()
 {
     int *current_node_array_size = malloc(sizeof(int));
@@ -164,7 +124,7 @@ int main()
         fileExists = 1;
     }
 
-    //need to explicitly manage the file overwrite when storing blockchain to file
+    // need to explicitly manage the file overwrite when storing blockchain to file
     fd = open("backup.txt", O_RDWR | O_CREAT, 0666);
     if (fd == -1)
     {
@@ -172,41 +132,46 @@ int main()
         return -1;
     }
 
+    Node **node_array = NULL;
+
     if (fileExists == 1)
     {
-       Node ** node_array = load_blockchain_data(fd, current_node_array_size); 
-        if(!node_array)
+        node_array = load_blockchain_data(fd, current_node_array_size);
+        if (!node_array)
         {
-            printf("Unable to load blockchain data from file.");
+            printf("Unable to load blockchain data from file.\n");
+            return -1;
+        }
+    }
+    else
+    {
+        node_array = build_node_array(current_node_array_size);
+        if (!node_array)
+        {
+            printf("Unable to allocate memory.\n");
             return -1;
         }
     }
 
-    // else just chill and save to stuff later
-    int sync_status = check_sync_status(node_array, current_node_array_size);
-    // int sync_status = check_sync_status(map);
-    int sync_status = 1; // by default or if
-    // checking through the file can confirm synced
-    // else will be 0
+    int sync_status = 1; // default sync status
     int num_nodes = 0;
-
-    
-
     int quit_flag = 0;
 
-    // could use enums here!!! to simpify parsing
     while (quit_flag == 0)
     {
-    char *input_string = malloc((INPUT_STRING_LENGTH + 1) * sizeof(char));
-    if (!input_string)
-    {
-        printf("Unable to allocate memory.\n");
-        return -1;
-    }
-    my_memset(input_string, '\0', INPUT_STRING_LENGTH + 1);
-    
+        char *input_string = malloc((INPUT_STRING_LENGTH + 1) * sizeof(char));
+        if (!input_string)
+        {
+            printf("Unable to allocate memory.\n");
+            return -1;
+        }
+        my_memset(input_string, '\0', INPUT_STRING_LENGTH + 1);
+
+        num_nodes = calc_num_nodes(node_array, *current_node_array_size);
+        sync_status = check_sync_status(node_array, current_node_array_size);
+
         char sync_symbol;
-        
+
         if (sync_status == 1)
         {
             sync_symbol = 's';
@@ -228,9 +193,10 @@ int main()
         input_string[n - 1] = '\0';
 
         int *num_tokens = malloc(sizeof(num_tokens));
-        if(!num_tokens)
+        if (!num_tokens)
         {
             printf("Unable to allocate memory.\n");
+            free(input_string);
             return -1;
         }
 
@@ -238,6 +204,8 @@ int main()
         if (!tokens_list)
         {
             printf("Unable to parse strings into inputs list\n");
+            free(input_string);
+            free(num_tokens);
             return -1;
         }
 
@@ -254,38 +222,91 @@ int main()
             printf("\n");
         }
 
-        /*
-        if (remove_node() == -1)
+        // keywords for blockchain commands
+        char add_c[10] = "add";
+        char rm_c[10] = "rm";
+        char node_c[10] = "node";
+        char block_c[10] = "block";
+        char ls_c[10] = "ls";
+        char l_c[10] = "-l";
+        char sync_c[10] = "sync";
+        char quit_c[10] = "quit";
+
+        // add node nid
+        if (*num_tokens == 3 && my_strcmp(add_c, tokens_list[0]) == 0 && my_strcmp(node_c, tokens_list[1]) == 0)
         {
-            error_message4(); 
-        }        
-        else
-        {
-            ok_computer(); 
-        } 
-
-        */
-
-        //rm node nid
-        
-        //***MAKE SURE TO USE ok_computer() fn after doing command ***//
-
-
-
-        /*use the if then logic to differentiate what commands to use
-        - are the numbers only for tokens_list[2] && tokens_list[3]
-
-
-        */
-
-        const char *quit_string = "quit";
-        if (my_strcmp(quit_string, tokens_list[0]) == 0)
+            if (add_node(tokens_list[2], node_array, current_node_array_size) < 0)
             {
-                quit_flag = 1;
+                // shows error_message(2) or allocation error and gracefully go to next input
+                goto cleanup;
             }
+            else
+                ok_computer();
+        }
 
-        // free(current_node_array_size)???
+        // rm node nid         rm node nid *
+        else if (*num_tokens == 3 && my_strcmp(rm_c, tokens_list[0]) == 0 && my_strcmp(node_c, tokens_list[1]) == 0)
+        {
+            if (remove_node(tokens_list[2], node_array, current_node_array_size) < 0)
+            {
+                goto cleanup;
+            }
+            else
+                ok_computer();
+        }
 
+        //add block bid nid       add block bid *
+        else if (*num_tokens == 4 && my_strcmp(add_c, tokens_list[0]) == 0 && my_strcmp(block_c, tokens_list[1]) == 0)
+        {
+            if(add_block(tokens_list[3], tokens_list[2], node_array, current_node_array_size) < 0)
+            {
+                goto cleanup;
+            }
+            else
+                ok_computer();
+        } 
+        
+        //ls          
+        else if (*num_tokens == 1 && my_strcmp(ls_c, tokens_list[0]) == 0)
+        {
+            if(list_nodes(node_array, current_node_array_size) < 0)
+            {
+                goto cleanup;
+            }
+            else
+                ok_computer();
+
+        }
+
+        //ls -l
+        else if (*num_tokens == 2 && my_strcmp(ls_c, tokens_list[0]) == 0 && my_strcmp(l_c, tokens_list[1]))
+        {
+            if(list_nodes_blocks(node_array, current_node_array_size) < 0)
+            {
+                goto cleanup;
+            }
+            else
+                ok_computer();
+        }
+
+        //sync
+        else if (*num_tokens == 1 && my_strcmp(sync_c, tokens_list[0]) == 0)
+        {
+            if(sync_blockchain(node_array, current_node_array_size) < 0)
+            {
+                goto cleanup;
+            }
+            else
+                ok_computer();
+        }
+        
+        //quit 
+        else if (my_strcmp(quit_c, tokens_list[0]) == 0)
+        {
+            quit_flag = 1;
+        }
+
+    cleanup:
         free_string_array(tokens_list, *num_tokens);
         free(num_tokens);
         free(input_string);
@@ -293,13 +314,18 @@ int main()
 
     if (quit_flag == 1)
     {
-        // backup info and write to file
-
-        printf("Backing up blockchain...");
+        if(save_blockchain_data(fd, node_array, current_node_array_size) < 0)
+        {
+            printf("Unable to save blockchain data.");
+            return -1;
+        }
+        else
+            printf("Backing up blockchain...");
     }
 
     // free node array and everything involved with it
-
+    close(fd); 
+    free_node_array(node_array, current_node_array_size);
     free(current_node_array_size);
     return 0;
 }
@@ -375,7 +401,7 @@ int my_strcmp(const char *s1, const char *s2)
 void *my_memset(void *str, int c, size_t n)
 {
     unsigned char *ptr = (unsigned char *)str;
-    
+
     for (size_t i = 0; i < n; i++)
     {
         ptr[i] = (unsigned char)c;
@@ -418,10 +444,10 @@ char **parse_string(const char *string, int string_length, int *num_tokens)
     for (int i = 0; i < *num_tokens; i++)
     {
         tokens_list[i] = malloc((string_length + 1) * (sizeof(char)));
-        if(!tokens_list)
+        if (!tokens_list)
         {
             printf("Unable to allocate memory.");
-            for(int j = 0; j < i; j++)
+            for (int j = 0; j < i; j++)
             {
                 free(tokens_list[j]);
             }

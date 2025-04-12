@@ -1,4 +1,7 @@
 
+#define INPUT_STRING_LENGTH 40 
+
+
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -6,12 +9,7 @@
 #include <sys/stat.h>
 
 #include <string.h> //TEMPORARY WHILE TESTING!!!
-// #include "my_blockchain.c" // only temporarily while building
 
-// #define INITIAL_NODE_ARRAY_SIZE 256
-// #define ARRAY_EXPANSION_AMOUNT 256
-
-#define INPUT_STRING_LENGTH 40 // ************************JUST FOR TESTING ************Maximum number of characters in the string (excluding the null terminator)
 
 #define INITIAL_NODE_ARRAY_SIZE 16
 #define ARRAY_EXPANSION_AMOUNT 16
@@ -34,6 +32,7 @@ typedef struct Node
 Node **build_node_array(int *current_node_array_size);
 Node *create_node();
 Block *create_block();
+int calc_num_nodes(Node **node_array, int *current_node_array_size);
 int add_node(char *nid, Node **node_array, int *current_node_array_size);
 int expand_node_array(Node **node_array, int *current_node_array_size);
 int remove_node(char *nid, Node **node_array, int *current_node_array_size);
@@ -52,7 +51,6 @@ int *build_bid_numbers(int bid_array_size, Node **node_array, int *current_node_
 int rebuild_node_array(Node **node_array, int *current_node_array_size, int bid_numbers[], int bid_array_size);
 ssize_t parse_ssize_t(char *string, int str_len);
 int check_sync_status(Node **node_array, int *current_node_array_size);
-
 
 //--------------------------------------------------------------
 void error_message1()
@@ -122,7 +120,6 @@ int my_strcmp(const char *s1, const char *s2)
 
     return 0;
 }
-//---------------------------------------------------------------------
 
 void *my_memset(void *str, int c, size_t n)
 {
@@ -135,6 +132,7 @@ void *my_memset(void *str, int c, size_t n)
 
     return str;
 }
+// //---------------------------------------------------------------------
 
 // array of pointers to nodes
 Node **build_node_array(int *current_node_array_size)
@@ -272,6 +270,8 @@ int expand_node_array(Node **node_array, int *current_node_array_size)
 
 int remove_node(char *nid, Node **node_array, int *current_node_array_size)
 {
+    int node_found = 0;
+
     // remove all nodes and associated blocks
     if (nid[0] == '*' && nid[1] == '\0')
     {
@@ -307,6 +307,7 @@ int remove_node(char *nid, Node **node_array, int *current_node_array_size)
             {
                 if (node_array[i]->block_list)
                 {
+                    node_found = 1;
                     Block *current_block = node_array[i]->block_list;
                     //>>>need to check if it contains blocks and make sure to free them correctly
                     while (current_block != NULL)
@@ -321,7 +322,29 @@ int remove_node(char *nid, Node **node_array, int *current_node_array_size)
             }
         }
     }
+
+    if (node_found == 0)
+    {
+        error_message4();
+        return -1;
+    }
+
     return 0;
+}
+
+int calc_num_nodes(Node **node_array, int *current_node_array_size)
+{
+    int node_counter = 0;
+
+    for (int i = 0; i < *current_node_array_size; i++)
+    {
+        if (node_array[i] != 0)
+        {
+            node_counter++;
+        }
+    }
+
+    return node_counter;
 }
 
 int add_block(char *nid, char *bid, Node **node_array, int *current_node_array_size)
@@ -344,6 +367,7 @@ int add_block(char *nid, char *bid, Node **node_array, int *current_node_array_s
             Block *new_block = create_block();
             if (!new_block)
             {
+                printf("Unable to allocate memory.\n");
                 return -1;
             }
             new_block->block_id = bid_num;
@@ -384,6 +408,7 @@ int add_block(char *nid, char *bid, Node **node_array, int *current_node_array_s
                 Block *new_block = create_block();
                 if (!new_block)
                 {
+                    printf("Unable to allocate memory.\n");
                     return -1;
                 }
                 new_block->block_id = bid_num;
@@ -599,12 +624,23 @@ int sync_blockchain(Node **node_array, int *current_node_array_size)
     if (!bid_numbers)
     {
         printf("Unable to sync blockchain.\n");
+        free(bid_numbers); 
         return -1;
     }
 
-    sort_node_array(node_array, current_node_array_size);
+    if(sort_node_array(node_array, current_node_array_size) < 0)
+    {
+        printf("Unable to sync blockchain.\n");
+        free(bid_numbers);
+        return -1;
+    }
 
-    rebuild_node_array(node_array, current_node_array_size, bid_numbers, bid_array_size);
+    if(rebuild_node_array(node_array, current_node_array_size, bid_numbers, bid_array_size) < 0)
+    {
+        printf("Unable to sync blockchain.\n");
+        free(bid_numbers);
+        return -1;
+    }
 
     free(bid_numbers);
 
@@ -837,14 +873,14 @@ int check_sync_status(Node **node_array, int *current_node_array_size)
     // checking sync status of nodes
     for (int i = 0; i < *current_node_array_size; i++)
     {
-        //if all nodes empty and current node is empty of blocks
-        if(node_array[i]->node_id != 0 && node_array[i]->block_list == NULL && bid_numbers[0] == 0)
+        // if all nodes empty and current node is empty of blocks
+        if (node_array[i]->node_id != 0 && node_array[i]->block_list == NULL && bid_numbers[0] == 0)
         {
             continue;
-        } 
-        
-        //current node is empty of blocks, but others are not
-        else if(node_array[i]->node_id != 0 && node_array[i]->block_list == NULL && bid_numbers[0] != 0)
+        }
+
+        // current node is empty of blocks, but others are not
+        else if (node_array[i]->node_id != 0 && node_array[i]->block_list == NULL && bid_numbers[0] != 0)
         {
             free(bid_numbers);
             return 0;
