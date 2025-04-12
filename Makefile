@@ -11,13 +11,13 @@ CFLAGS = -Wall -Wextra -Werror -g #-std=c99
 TARGET = my_blockchain
 
 # Source files (add all your .c files here)
-SRC = my_blockchain.c  
+SRC = my_blockchain.c dsa.c 
 
 # Object files (derived automatically from SRC)
 OBJ = $(SRC:.c=.o)
 
 # Header files (optional but useful for dependency management)
-HEADERS =  #utils.h 
+HEADERS =  dsa.h 
 
 # Build target
 all: $(TARGET)

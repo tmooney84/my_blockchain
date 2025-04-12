@@ -10,6 +10,7 @@
 
 #define INITIAL_NODE_ARRAY_SIZE 16
 #define ARRAY_EXPANSION_AMOUNT 16
+#define INPUT_STRING_LENGTH 40 
 
 typedef struct Block
 {
@@ -45,8 +46,16 @@ int *build_bid_numbers(int bid_array_size, Node **node_array, int *current_node_
 int rebuild_node_array(Node **node_array, int *current_node_array_size, int bid_numbers[], int bid_array_size);
 ssize_t parse_ssize_t(char *string, int str_len);
 int check_sync_status(Node **node_array, int *current_node_array_size);
-
-
-
+char **parse_string(const char *string, int string_length, int *num_tokens);
+int my_strcmp(const char *s1, const char *s2);
+void free_string_array(char **names, int num_names);
+void *my_memset(void *str, int c, size_t n);
+void error_message1();
+void error_message2();
+void error_message3();
+void error_message4();
+void error_message5();
+void error_message6();
+void ok_computer();
 
 #endif

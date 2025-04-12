@@ -1,87 +1,3 @@
-// My Blockchain
-// Submit directory	.
-// Submit files	Makefile - *.c - *.h
-// Description
-// Command Name
-// my_blockchain
-
-// Blockchain: the Beginning
-// my_blockchain -- create a blockchain
-
-// Synopsis
-// my_blockchain
-
-// Description
-// Blockchain is a command that allows for the creation and management of a blockchain. When the program starts (it loads a backup if there is one) then a prompt appears. This prompt allows to execute commands. When the commands are successful they display "ok" and if not, "nok: info" or info is an error message - see below:
-
-// add node nid add a nid identifier to the blockchain node.
-// rm node nid... remove nodes from the blockchain with a nid identifier. If nid is '*', then all nodes are impacted.
-// add block bid nid... add a bid identifier block to nodes identified by nid. If nid is '*', then all nodes are impacted.
-// rm block bid nid... remove the bid identified blocks from nodes identified by nid..
-// ls list all nodes by their identifiers. The option -l attaches the blocks bid's associated with each node.
-// sync synchronize all of the nodes with each other. Upon issuing this command, all of the nodes are composed of the same blocks.
-// quit save and leave the blockchain.
-// The blockchain prompt must display (see example below):
-
-// a [ character
-// a first letter that indicates the state of synchronization of the chain:
-// "s" if the blockchain is synchronized
-// "-" if the blockchain is not synchronized.
-// n number of nodes in the chain.
-// the "]> " string (with a space)
-// Error messages
-// 1: no more resources available on the computer
-// 2: this node already exists
-// 3: this block already exists
-// 4: node doesn't exist
-// 5: block doesn't exist
-// 6: command not found
-// Technical Information
-// $>my_blockhain
-// No Backup Found: Starting New Blockchain
-// [s0]> add node 12
-// OK
-// [s1]> add block 21 *
-// OK
-// [s1]> add node 13
-// OK
-// [-2]> sync
-// OK
-// [s2]> ls -l
-// 12: 21
-// 13: 21
-// [s2]> quit
-// Backing up blockchain...
-// $>my_blockhain
-// Restoring From Backup
-// [s2]> ls -l
-// 12: 21
-// 13: 21
-// [s2]>
-// you must create a Makefile, and the output is the command itself
-// NID is an integer, BID is a string
-// You can use:
-// • malloc(3)
-
-// • free(3)
-
-// • printf(3)
-
-// • write(2)
-
-// • open(2)
-
-// • read(2)
-
-// • close(2)
-
-// Multiline macros are forbidden
-
-// Include another .c is forbidden
-
-// Macros with logic (while/if/variables/...) are forbidden
-//-----------------------------------------------------
-
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -90,25 +6,19 @@
 #include <stddef.h>
 #include <string.h>
 
-/*************NEED TO CREATE dsa.h FILE!!!!*************************** */
-#include "dsa.c"
-/**************************************** */
+#include "dsa.h"
 
-#define HASH_SIZE 256
-#define INPUT_STRING_LENGTH 40 // Maximum number of characters in the string (excluding the null terminator)
-#define INITIAL_NODE_ARRAY_SIZE 256
-
-char **parse_string(const char *string, int string_length, int *num_tokens);
-int my_strcmp(const char *s1, const char *s2);
-void free_string_array(char **names, int num_names);
-void *my_memset(void *str, int c, size_t n);
-void error_message1();
-void error_message2();
-void error_message3();
-void error_message4();
-void error_message5();
-void error_message6();
-void ok_computer();
+// char **parse_string(const char *string, int string_length, int *num_tokens);
+// int my_strcmp(const char *s1, const char *s2);
+// void free_string_array(char **names, int num_names);
+// void *my_memset(void *str, int c, size_t n);
+// void error_message1();
+// void error_message2();
+// void error_message3();
+// void error_message4();
+// void error_message5();
+// void error_message6();
+// void ok_computer();
 
 int main()
 {
@@ -167,8 +77,12 @@ int main()
         }
         my_memset(input_string, '\0', INPUT_STRING_LENGTH + 1);
 
-        num_nodes = calc_num_nodes(node_array, *current_node_array_size);
-        sync_status = check_sync_status(node_array, current_node_array_size);
+        num_nodes = calc_num_nodes(node_array, current_node_array_size);
+     //*************************TESTING******************** */ 
+        // printf("Num nodes: are %d\n", num_nodes);
+       
+       
+       sync_status = check_sync_status(node_array, current_node_array_size);
 
         char sync_symbol;
 
@@ -209,18 +123,18 @@ int main()
             return -1;
         }
 
-        // TEST: print out array of strings
-        for (int i = 0; i < *num_tokens; i++)
-        {
-            printf("token[%d]: ", i);
+        // // TEST: print out array of strings
+        // for (int i = 0; i < *num_tokens; i++)
+        // {
+        //     printf("token[%d]: ", i);
 
-            for (int j = 0; j < INPUT_STRING_LENGTH && tokens_list[i][j] != '\0'; j++)
-            {
-                printf("%c", tokens_list[i][j]);
-            }
+        //     for (int j = 0; j < INPUT_STRING_LENGTH && tokens_list[i][j] != '\0'; j++)
+        //     {
+        //         printf("%c", tokens_list[i][j]);
+        //     }
 
-            printf("\n");
-        }
+        //     printf("\n");
+        // }
 
         // keywords for blockchain commands
         char add_c[10] = "add";
@@ -273,20 +187,15 @@ int main()
             {
                 goto cleanup;
             }
-            else
-                ok_computer();
-
         }
 
         //ls -l
-        else if (*num_tokens == 2 && my_strcmp(ls_c, tokens_list[0]) == 0 && my_strcmp(l_c, tokens_list[1]))
+        else if (*num_tokens == 2 && my_strcmp(ls_c, tokens_list[0]) == 0 && my_strcmp(l_c, tokens_list[1]) == 0)
         {
             if(list_nodes_blocks(node_array, current_node_array_size) < 0)
             {
                 goto cleanup;
             }
-            else
-                ok_computer();
         }
 
         //sync
@@ -304,6 +213,9 @@ int main()
         else if (my_strcmp(quit_c, tokens_list[0]) == 0)
         {
             quit_flag = 1;
+            lseek(fd, 0, SEEK_SET);
+            save_blockchain_data(fd, node_array, current_node_array_size);
+            printf("Backing up blockchain...");
         }
 
     cleanup:
@@ -312,16 +224,16 @@ int main()
         free(input_string);
     }
 
-    if (quit_flag == 1)
-    {
-        if(save_blockchain_data(fd, node_array, current_node_array_size) < 0)
-        {
-            printf("Unable to save blockchain data.");
-            return -1;
-        }
-        else
-            printf("Backing up blockchain...");
-    }
+   // if (quit_flag == 1)
+    //{
+     //   if(save_blockchain_data(fd, node_array, current_node_array_size) < 0)
+        // {
+        //     printf("Unable to save blockchain data.");
+        //     return -1;
+        // }
+    //    else
+    //        printf("Backing up blockchain...");
+   // }
 
     // free node array and everything involved with it
     close(fd); 
@@ -330,184 +242,158 @@ int main()
     return 0;
 }
 
-void error_message1()
-{
-    printf("1: no more resources available on the computer\n");
-}
+// void error_message1()
+// {
+//     printf("1: no more resources available on the computer\n");
+// }
 
-void error_message2()
-{
-    printf("2: this node already exists\n");
-}
+// void error_message2()
+// {
+//     printf("2: this node already exists\n");
+// }
 
-void error_message3()
-{
-    printf("3: this block already exists\n");
-}
+// void error_message3()
+// {
+//     printf("3: this block already exists\n");
+// }
 
-void error_message4()
-{
-    printf("4: node doesn't exist\n");
-}
+// void error_message4()
+// {
+//     printf("4: node doesn't exist\n");
+// }
 
-void error_message5()
-{
-    printf("5: block doesn't exist\n");
-}
+// void error_message5()
+// {
+//     printf("5: block doesn't exist\n");
+// }
 
-void error_message6()
-{
-    printf("6: command not found\n");
-}
+// void error_message6()
+// {
+//     printf("6: command not found\n");
+// }
 
-void ok_computer()
-{
-    printf("OK\n");
-}
+// void ok_computer()
+// {
+//     printf("OK\n");
+// }
 
-// frees pointers related to string array
-void free_string_array(char **names, int num_names)
-{
-    if (names == NULL)
-    {
-        return;
-    }
+// // frees pointers related to string array
+// void free_string_array(char **names, int num_names)
+// {
+//     if (names == NULL)
+//     {
+//         return;
+//     }
 
-    for (int i = 0; i < num_names; i++)
-    {
-        free(names[i]); // Free each dynamically allocated string
-    }
+//     for (int i = 0; i < num_names; i++)
+//     {
+//         free(names[i]); // Free each dynamically allocated string
+//     }
 
-    free(names);
-}
+//     free(names);
+// }
 
-int my_strcmp(const char *s1, const char *s2)
-{
-    for (int i = 0; s1[i] != '\0' || s2[i] != '\0'; i++)
-    {
-        if (s1[i] < s2[i])
-        {
-            return -1;
-        }
-        else if (s1[i] > s2[i])
-        {
-            return 1;
-        }
-    }
+// int my_strcmp(const char *s1, const char *s2)
+// {
+//     for (int i = 0; s1[i] != '\0' || s2[i] != '\0'; i++)
+//     {
+//         if (s1[i] < s2[i])
+//         {
+//             return -1;
+//         }
+//         else if (s1[i] > s2[i])
+//         {
+//             return 1;
+//         }
+//     }
 
-    return 0;
-}
+//     return 0;
+// }
 
-void *my_memset(void *str, int c, size_t n)
-{
-    unsigned char *ptr = (unsigned char *)str;
+// void *my_memset(void *str, int c, size_t n)
+// {
+//     unsigned char *ptr = (unsigned char *)str;
 
-    for (size_t i = 0; i < n; i++)
-    {
-        ptr[i] = (unsigned char)c;
-    }
+//     for (size_t i = 0; i < n; i++)
+//     {
+//         ptr[i] = (unsigned char)c;
+//     }
 
-    return str;
-}
+//     return str;
+// }
 
-char **parse_string(const char *string, int string_length, int *num_tokens)
-{
-    *num_tokens = 0;
-    int in_word = 0;
+// char **parse_string(const char *string, int string_length, int *num_tokens)
+// {
+//     *num_tokens = 0;
+//     int in_word = 0;
 
-    // how many substrings does the string contain
-    for (int i = 0; i < string_length; i++)
-    {
-        if (string[i] != ' ')
-        {
-            if (!in_word)
-            {
-                in_word = 1;
-                (*num_tokens)++;
-            }
-        }
-        else
-        {
-            in_word = 0;
-        }
-    }
+//     // how many substrings does the string contain
+//     for (int i = 0; i < string_length; i++)
+//     {
+//         if (string[i] != ' ')
+//         {
+//             if (!in_word)
+//             {
+//                 in_word = 1;
+//                 (*num_tokens)++;
+//             }
+//         }
+//         else
+//         {
+//             in_word = 0;
+//         }
+//     }
 
-    // create array of empty strings
-    char **tokens_list = malloc(*num_tokens * sizeof(char *));
-    if (!tokens_list)
-    {
-        printf("Unable to read input\n");
-        return NULL;
-    }
-    my_memset(tokens_list, '\0', *num_tokens);
+//     // create array of empty strings
+//     char **tokens_list = malloc(*num_tokens * sizeof(char *));
+//     if (!tokens_list)
+//     {
+//         printf("Unable to read input\n");
+//         return NULL;
+//     }
+//     my_memset(tokens_list, '\0', *num_tokens);
 
-    for (int i = 0; i < *num_tokens; i++)
-    {
-        tokens_list[i] = malloc((string_length + 1) * (sizeof(char)));
-        if (!tokens_list)
-        {
-            printf("Unable to allocate memory.");
-            for (int j = 0; j < i; j++)
-            {
-                free(tokens_list[j]);
-            }
-            free(tokens_list);
-            return NULL;
-        }
-        my_memset(tokens_list[i], '\0', (string_length + 1));
-    }
+//     for (int i = 0; i < *num_tokens; i++)
+//     {
+//         tokens_list[i] = malloc((string_length + 1) * (sizeof(char)));
+//         if (!tokens_list)
+//         {
+//             printf("Unable to allocate memory.");
+//             for (int j = 0; j < i; j++)
+//             {
+//                 free(tokens_list[j]);
+//             }
+//             free(tokens_list);
+//             return NULL;
+//         }
+//         my_memset(tokens_list[i], '\0', (string_length + 1));
+//     }
 
-    // tokenize string into sub-strings in token_list
-    int ss_idx = 0; // substring index
-    in_word = 0;    // flag to indicate that currently iterating through word
-    for (int i = 0, j = 0; i < string_length && j < *num_tokens; i++)
-    {
-        if (string[i] != ' ')
-        {
-            if (in_word == 0)
-            {
-                in_word = 1;
-            }
+//     // tokenize string into sub-strings in token_list
+//     int ss_idx = 0; // substring index
+//     in_word = 0;    // flag to indicate that currently iterating through word
+//     for (int i = 0, j = 0; i < string_length && j < *num_tokens; i++)
+//     {
+//         if (string[i] != ' ')
+//         {
+//             if (in_word == 0)
+//             {
+//                 in_word = 1;
+//             }
 
-            tokens_list[j][ss_idx] = string[i];
-            ss_idx++;
-        }
-        else
-        {
-            if (in_word == 1)
-            {
-                j++;
-            }
-            in_word = 0;
-            ss_idx = 0;
-        }
-    }
+//             tokens_list[j][ss_idx] = string[i];
+//             ss_idx++;
+//         }
+//         else
+//         {
+//             if (in_word == 1)
+//             {
+//                 j++;
+//             }
+//             in_word = 0;
+//             ss_idx = 0;
+//         }
+//     }
 
-    return tokens_list;
-}
-
-/*
-1)check if backing store exists, if so open it
-otherwise open() and make sure read and write
-but also with complete write over (trunc?)
-
-2) if backing store exists parse the serialized
-input into the associated structs and build the
-"objects/structs" from this info
-
-3)display prompt of [s0]>
-from there they can call one of the functions
-with typing in the string "add node 12". Remember
-* means to apply to all, so delimit with space.
-could use regex? or keep it simple, when space break add '\n' and use switch fn. I then
-parse this string and if formatted correctly,
-splice it so that I can get the one - three arguments,
-if they exist to plug into the associated function.
-If there is an with input make sure to return
-
-3) process based off each of the particular functions
-
-4) once completed gather the nodes and save them to
-file by "Backing up the blockchain..."
-
-*/
+//     return tokens_list;
+// }
