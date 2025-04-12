@@ -187,6 +187,12 @@ int main()
             lseek(fd, 0, SEEK_SET);
             save_blockchain_data(fd, node_array, current_node_array_size);
             printf("Backing up blockchain...");
+            goto cleanup;
+        }
+
+        else
+        {
+            error_message6();
         }
 
     cleanup:
