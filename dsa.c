@@ -322,9 +322,9 @@ int remove_node(char *nid, Node **node_array, int *current_node_array_size)
         {
             if (node_array[i]->node_id == nid_num)
             {
+                node_found = 1;
                 if (node_array[i]->block_list)
                 {
-                    node_found = 1;
                     Block *current_block = node_array[i]->block_list;
                     //>>>need to check if it contains blocks and make sure to free them correctly
                     while (current_block != NULL)
@@ -760,6 +760,26 @@ int save_blockchain_data(int fd, Node **node_array, int *current_node_array_size
     {
         printf("Unable to write to file");
         return -1;
+    }
+
+    if (!sort_node_array(node_array, current_node_array_size))
+    {
+        printf("Unable to sort node_array");
+        return -1;
+    }
+
+    //if no data to save
+    else if(node_array[0]->node_id == 0)
+    {
+        lseek(fd, 0, SEEK_SET);
+        close(fd);
+        fd = open("backup.txt", O_WRONLY | O_TRUNC, 0666);
+        if(fd == -1)
+        {
+            printf("error truncating file.");
+            return -1;
+        }
+        return 1;
     }
 
     // write number of nodes

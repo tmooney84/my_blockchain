@@ -17,9 +17,13 @@ int main()
     struct stat file_stats;
     int fileExists = 0;
 
-    if (stat("backup.txt", &file_stats) == 0)
+    if (stat("backup.txt", &file_stats) == 0 && file_stats.st_size > 0)
     {
         fileExists = 1;
+    }
+    else
+    {
+        printf("No Backup Found: Starting New Blockchain\n");
     }
 
     fd = open("backup.txt", O_RDWR | O_CREAT, 0666);
