@@ -780,7 +780,7 @@ int save_blockchain_data(int fd, Node **node_array, int *current_node_array_size
             return -1;
         }
         return 1;
-    }
+   }
 
     // write number of nodes
     write(fd, current_node_array_size, sizeof(int));
