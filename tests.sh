@@ -1,50 +1,3 @@
-# echo "starting tests..."
-
-# echo ""
-
-# #1)
-# #add node 1
-# #add node 2
-# #add node 3
-# #ls
-# #ls -l and compare
-
-# #2)
-# #add block 1111 2
-# #ls -l
-
-# #3)
-# #add block 2222 4 >>> should have error
-# #add block 4444 *
-# #ls -l
-
-# #4)
-# #rm node 2
-# #ls -l
-
-# #5)
-# #rm node 4 >>> should have an error
-
-# #6)
-# #rm block 4444 1
-# #ls -l
-
-# #7)
-# #add block 3333 3
-# #add node 5
-# #ls -l
-
-# #8)
-# #sync
-# #ls -l
-
-# #9)
-# #quit
-# #restart and make sure they all come back up
-# #ls -l
-
-
-
 #!/bin/bash
 #
 # tests.sh — run all of your test‑cases against the blockchain program
@@ -76,6 +29,8 @@ run_test() {
   # run the program and capture its stdout+stderr
   printf "%s\n" "$here_doc" | "$PROGRAM" > "$TEST_DIR/actual/out${id}.txt" 2>&1
 
+  echo ""
+  echo "---------------------------------------------------------------------------------"
   # compare to expected
   if diff -u "$TEST_DIR/expected/out${id}.txt" "$TEST_DIR/actual/out${id}.txt" >/dev/null; then
     echo "Test $id: PASS"

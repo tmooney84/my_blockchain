@@ -90,7 +90,13 @@ int main()
         if (n < 0)
         {
             printf("Unable to read input\n");
+            free(input_string);
             return -1;
+        }
+        if(n == 0){
+            //End of input (EOF), exit the loop
+            free(input_string);
+            break;
         }
         input_string[n - 1] = '\0';
 
@@ -190,7 +196,7 @@ int main()
             quit_flag = 1;
             lseek(fd, 0, SEEK_SET);
             save_blockchain_data(fd, node_array, current_node_array_size);
-            printf("Backing up blockchain...");
+            printf("Backing up blockchain...\n");
             goto cleanup;
         }
 
