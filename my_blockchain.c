@@ -100,7 +100,7 @@ int main()
         }
         input_string[n - 1] = '\0';
 
-        int *num_tokens = malloc(sizeof(num_tokens));
+        int *num_tokens = malloc(sizeof(int));
         if (!num_tokens)
         {
             printf("Unable to allocate memory.\n");
