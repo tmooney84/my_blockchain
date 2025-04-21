@@ -25,7 +25,7 @@ int main()
     }
     else
     {
-        fprintf(stderr,"No Backup Found: Starting New Blockchain\n");
+        printf("No Backup Found: Starting New Blockchain\n");
     }
 
     fd = open("backup.txt", O_RDWR | O_CREAT, 0666);
