@@ -90,20 +90,6 @@ int main()
 
         input_string = my_readline(0);
 
-        // int n = read(STDIN_FILENO, input_string, INPUT_STRING_LENGTH);
-        // if (n < 0)
-        // {
-        //     printf("Unable to read input\n");
-        //     free(input_string);
-        //     return -1;
-        // }
-        // if(n == 0){
-        //     //End of input (EOF), exit the loop
-        //     free(input_string);
-        //     break;
-        // }
-        // input_string[n - 1] = '\0';
-
         int *num_tokens = malloc(sizeof(int));
         if (!num_tokens)
         {
