@@ -62,14 +62,6 @@ int main()
 
     while (quit_flag == 0)
     {
-        char *input_string = malloc((INPUT_STRING_LENGTH + 1) * sizeof(char));
-        if (!input_string)
-        {
-            printf("Unable to allocate memory.\n");
-            return -1;
-        }
-        my_memset(input_string, '\0', INPUT_STRING_LENGTH + 1);
-
         num_nodes = calc_num_nodes(node_array, current_node_array_size);
        
        sync_status = check_sync_status(node_array, current_node_array_size);
@@ -88,7 +80,13 @@ int main()
         printf("[%c%d]> ", sync_symbol, num_nodes);
         fflush(stdout);
 
-        input_string = my_readline(0);
+        char *input_string = my_readline(0);
+        if(input_string == NULL) 
+        {
+            quit_flag = 1;
+            free(input_string);
+            break;
+        }
 
         int *num_tokens = malloc(sizeof(int));
         if (!num_tokens)
@@ -101,10 +99,10 @@ int main()
         char **tokens_list = parse_string(input_string, INPUT_STRING_LENGTH, num_tokens);
         if (!tokens_list)
         {
-            printf("Unable to parse strings into inputs list\n");
-            free(input_string);
+            error_message6(); 
             free(num_tokens);
-            return -1;
+            free(input_string); 
+            continue;
         }
 
         // keywords for blockchain commands
