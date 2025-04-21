@@ -1,5 +1,8 @@
 #include "dsa.h"
 
+int READLINE_READ_SIZE = 1024;
+char *storage = NULL;
+
 void error_message1()
 {
     printf("1: no more resources available on the computer\n");
@@ -35,6 +38,106 @@ void ok_computer()
     printf("OK\n");
 }
 
+int find_nl_index(const char *s)
+{
+    int i = 0;
+    while (s[i] != '\0')
+    {
+        if (s[i] == '\n')
+        {
+            return i;
+        }
+        i++;
+    }
+    return -1;
+}
+
+char *combine_str_and_free_first(char *s1, char *s2, int len2)
+{
+    int len1 = 0;
+    if (s1 != NULL)
+    {
+        len1 = strlen(s1);
+    }
+    char *result = (char *)malloc(len1 + len2 + 1);
+    if (result == NULL)
+    {
+        return NULL;
+    }
+
+    if (s1 != NULL)
+    {
+        strcpy(result, s1);
+        free(s1);
+    }
+    memcpy(result + len1, s2, len2);
+    result[len1 + len2] = '\0';
+    return result;
+}
+
+void init_my_readline()
+{
+    if (storage)
+    {
+        free(storage);
+        storage = NULL;
+    }
+}
+
+char *my_readline(int fd)
+{
+    char buffer[READLINE_READ_SIZE + 1];
+    char *line = NULL;
+    ssize_t bytes_read;
+    int newline_index = -1;
+
+    if (storage != NULL)
+    {
+        newline_index = find_nl_index(storage);
+        if (newline_index != -1)
+        {
+            line = strndup(storage, newline_index);
+            char *new_storage = strdup(storage + newline_index + 1);
+            free(storage);
+            storage = new_storage;
+            return line;
+        }
+        else
+        {
+            line = strdup(storage);
+            free(storage);
+            storage = NULL;
+        }
+    }
+
+    while ((bytes_read = read(fd, buffer, READLINE_READ_SIZE)) > 0)
+    {
+        buffer[bytes_read] = '\0';
+        newline_index = find_nl_index(buffer);
+
+        if (newline_index != -1)
+        {
+            line = combine_str_and_free_first(line, buffer, newline_index);
+            storage = strdup(buffer + newline_index + 1);
+            return line;
+        }
+        else
+        {
+            line = combine_str_and_free_first(line, buffer, bytes_read);
+        }
+    }
+
+    if (line != NULL && *line != '\0')
+    {
+        return line;
+    }
+    if (line != NULL)
+    {
+        free(line);
+    }
+    return NULL;
+}
+
 void free_string_array(char **names, int num_names)
 {
     if (names == NULL)
@@ -44,7 +147,7 @@ void free_string_array(char **names, int num_names)
 
     for (int i = 0; i < num_names; i++)
     {
-        free(names[i]); 
+        free(names[i]);
     }
 
     free(names);
@@ -315,7 +418,7 @@ int remove_node(char *nid, Node **node_array, int *current_node_array_size)
     // remove node and associated block
     else
     {
-        int str_len = (int)INPUT_STRING_LENGTH; 
+        int str_len = (int)INPUT_STRING_LENGTH;
         ssize_t nid_num = parse_ssize_t(nid, str_len);
 
         for (int i = 0; i < *current_node_array_size; i++)
@@ -453,7 +556,7 @@ int add_block(char *nid, char *bid, Node **node_array, int *current_node_array_s
             }
         }
     }
-    
+
     if (nid_found_flag == 0)
     {
         error_message4();
@@ -768,19 +871,19 @@ int save_blockchain_data(int fd, Node **node_array, int *current_node_array_size
         return -1;
     }
 
-    //if no data to save
-    else if(node_array[0]->node_id == 0)
+    // if no data to save
+    else if (node_array[0]->node_id == 0)
     {
         lseek(fd, 0, SEEK_SET);
         close(fd);
         fd = open("backup.txt", O_WRONLY | O_TRUNC, 0666);
-        if(fd == -1)
+        if (fd == -1)
         {
             printf("error truncating file.");
             return -1;
         }
         return 1;
-   }
+    }
 
     // write number of nodes
     write(fd, current_node_array_size, sizeof(int));

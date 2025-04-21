@@ -24,6 +24,10 @@ typedef struct Node
     Block *block_list;
 } Node;
 
+int find_nl_index(const char *s);
+char *combine_str_and_free_first(char *s1, char *s2, int len2);
+void init_my_readline();
+char *my_readline(int fd);
 Node **build_node_array(int *current_node_array_size);
 Node *create_node();
 Block *create_block();
