@@ -25,7 +25,7 @@ int main()
     }
     else
     {
-        printf("No Backup Found: Starting New Blockchain\n");
+        fprintf(stderr,"No Backup Found: Starting New Blockchain\n");
     }
 
     fd = open("backup.txt", O_RDWR | O_CREAT, 0666);
@@ -77,7 +77,7 @@ int main()
             sync_symbol = '-';
         }
 
-        printf("[%c%d]> ", sync_symbol, num_nodes);
+        printf("[%c%d]>", sync_symbol, num_nodes);
         fflush(stdout);
 
         char *input_string = my_readline(0);
