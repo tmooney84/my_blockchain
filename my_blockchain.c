@@ -19,7 +19,8 @@ int main()
     struct stat file_stats;
     int fileExists = 0;
 
-    if (stat("backup.txt", &file_stats) == 0 && file_stats.st_size > 0)
+    //if (stat("backup.txt", &file_stats) == 0 && file_stats.st_size > 0)
+    if (stat("backup.txt", &file_stats) == 0)
     {
         fileExists = 1;
     }
@@ -42,8 +43,12 @@ int main()
         node_array = load_blockchain_data(fd, current_node_array_size);
         if (!node_array)
         {
-            printf("Unable to load blockchain data from file.\n");
+            node_array = build_node_array(current_node_array_size);
+        if (!node_array)
+        {
+            printf("Unable to allocate memory.\n");
             return -1;
+        }
         }
     }
     else

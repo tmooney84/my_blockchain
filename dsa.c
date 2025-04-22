@@ -915,7 +915,7 @@ Node **load_blockchain_data(int fd, int *current_node_array_size)
     // read number of nodes
     if (read(fd, current_node_array_size, sizeof(int)) != sizeof(int))
     {
-        printf("Unable to read file.\n");
+        //printf("Unable to read file.\n");
         return NULL;
     }
 
