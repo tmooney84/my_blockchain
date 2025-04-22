@@ -744,12 +744,12 @@ int sync_blockchain(Node **node_array, int *current_node_array_size)
         return -1;
     }
 
-    if (sort_node_array(node_array, current_node_array_size) < 0)
-    {
-        printf("Unable to sync blockchain.\n");
-        free(bid_numbers);
-        return -1;
-    }
+    // if (sort_node_array(node_array, current_node_array_size) < 0)
+    // {
+    //     printf("Unable to sync blockchain.\n");
+    //     free(bid_numbers);
+    //     return -1;
+    // }
 
     if (rebuild_node_array(node_array, current_node_array_size, bid_numbers, bid_array_size) < 0)
     {
@@ -801,8 +801,6 @@ int *build_bid_numbers(int bid_array_size, Node **node_array, int *current_node_
             }
         }
     }
-
-    //bubble_sort_ints(bid_numbers, block_idx);
 
     return bid_numbers;
 }
