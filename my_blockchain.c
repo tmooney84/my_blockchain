@@ -89,6 +89,11 @@ int main()
             free(input_string);
             break;
         }
+        if(strcmp(input_string, "") == 0)
+        {   
+            free(input_string);
+            continue;
+        }
         input_string[strcspn(input_string, "\r\n")] = '\0';
 
         int *num_tokens = malloc(sizeof(int));
