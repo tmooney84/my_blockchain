@@ -1,0 +1,4 @@
+add node 12
+add block 21 12
+ls -l
+

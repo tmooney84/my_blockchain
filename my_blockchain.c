@@ -80,6 +80,8 @@ int main()
         printf("[%c%d]>", sync_symbol, num_nodes);
         fflush(stdout);
 
+
+        //int fd = open("./file.txt", O_RDONLY);
         char *input_string = my_readline(0);
         if(input_string == NULL) 
         {
@@ -87,7 +89,7 @@ int main()
             free(input_string);
             break;
         }
-        input_string[strcspn(input_string, "\n")] = '\0';
+        input_string[strcspn(input_string, "\r\n")] = '\0';
 
         int *num_tokens = malloc(sizeof(int));
         if (!num_tokens)

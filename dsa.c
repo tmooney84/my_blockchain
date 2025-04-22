@@ -188,7 +188,7 @@ char **parse_string(const char *string, int string_length, int *num_tokens)
     int in_word = 0;
 
     // how many substrings does the string contain
-    for (int i = 0; i < string_length; i++)
+    for (int i = 0; i < string_length && string[i] != '\0'; i++)
     {
         if (string[i] != ' ')
         {
@@ -346,7 +346,7 @@ int add_node(char *nid, Node **node_array, int *current_node_array_size)
     }
     else if (open_element_num == -1)
     {
-        if (!expand_node_array(node_array, current_node_array_size))
+        if (expand_node_array(node_array, current_node_array_size) < 0)
         {
             printf("Unable to expand node_array");
             return -1;
