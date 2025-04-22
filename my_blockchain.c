@@ -89,7 +89,7 @@ int main()
             free(input_string);
             break;
         }
-        if(strcmp(input_string, "") == 0)
+        if(strcmp(input_string, "") == 0 || strcmp(input_string, " ") == 0)
         {   
             free(input_string);
             continue;
