@@ -702,11 +702,11 @@ int list_nodes_blocks(Node **node_array, int *current_node_array_size)
         Block *current = node_array[i]->block_list;
 
         //Print the first block without a leading space
-        if(current != NULL)
-        {
-            printf("%ld", current->block_id);
-            current = current->next;
-        }
+        // if(current != NULL)
+        // {
+        //     printf("%ld", current->block_id);
+        //     current = current->next;
+        // }
         //Print further blocks with a space between
         while (current != NULL)
         {
