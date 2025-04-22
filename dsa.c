@@ -665,11 +665,11 @@ int sort_node_array(Node **node_array, int *current_node_array_size)
 
 int list_nodes(Node **node_array, int *current_node_array_size)
 {
-    if (!sort_node_array(node_array, current_node_array_size))
-    {
-        printf("Unable to sort node_array");
-        return -1;
-    }
+    // if (!sort_node_array(node_array, current_node_array_size))
+    // {
+    //     printf("Unable to sort node_array");
+    //     return -1;
+    // }
 
     for (int i = 0; i < *current_node_array_size; i++)
     {
@@ -685,11 +685,11 @@ int list_nodes(Node **node_array, int *current_node_array_size)
 
 int list_nodes_blocks(Node **node_array, int *current_node_array_size)
 {
-    if (!sort_node_array(node_array, current_node_array_size))
-    {
-        printf("Unable to sort node_array");
-        return -1;
-    }
+    // if (!sort_node_array(node_array, current_node_array_size))
+    // {
+    //     printf("Unable to sort node_array");
+    //     return -1;
+    // }
 
     for (int i = 0; i < *current_node_array_size; i++)
     {
@@ -701,13 +701,6 @@ int list_nodes_blocks(Node **node_array, int *current_node_array_size)
         printf("%ld:", node_array[i]->node_id);
         Block *current = node_array[i]->block_list;
 
-        //Print the first block without a leading space
-        // if(current != NULL)
-        // {
-        //     printf("%ld", current->block_id);
-        //     current = current->next;
-        // }
-        //Print further blocks with a space between
         while (current != NULL)
         {
             printf(" %ld", current->block_id);
