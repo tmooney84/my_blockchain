@@ -32,6 +32,7 @@ char *my_readline(int fd);
 Node **build_node_array(int *current_node_array_size);
 Node *create_node();
 Block *create_block();
+void bubble_sort_ints(int arr[], int n);
 int calc_num_nodes(Node **node_array, int *current_node_array_size);
 int add_node(char *nid, Node **node_array, int *current_node_array_size);
 int expand_node_array(Node **node_array, int *current_node_array_size);

@@ -802,9 +802,21 @@ int *build_bid_numbers(int bid_array_size, Node **node_array, int *current_node_
         }
     }
 
-    qsort(bid_numbers, block_idx, sizeof(int), compare_ints); // Add after filling bid_numbers
+    bubble_sort_ints(bid_numbers, block_idx);
 
     return bid_numbers;
+}
+
+void bubble_sort_ints(int arr[], int n) {
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = 0; j < n - i - 1; j++) {
+            if (arr[j] > arr[j + 1]) {
+                int tmp = arr[j];
+                arr[j] = arr[j + 1];
+                arr[j + 1] = tmp;
+            }
+        }
+    }
 }
 
 int rebuild_node_array(Node **node_array, int *current_node_array_size, int bid_numbers[], int bid_array_size)
