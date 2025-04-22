@@ -802,7 +802,7 @@ int *build_bid_numbers(int bid_array_size, Node **node_array, int *current_node_
         }
     }
 
-    bubble_sort_ints(bid_numbers, block_idx);
+    //bubble_sort_ints(bid_numbers, block_idx);
 
     return bid_numbers;
 }
