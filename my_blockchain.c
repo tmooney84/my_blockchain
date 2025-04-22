@@ -8,8 +8,6 @@
 
 #include "dsa.h"
 
-
-
 int main()
 {
     int *current_node_array_size = malloc(sizeof(int));
@@ -19,7 +17,7 @@ int main()
     struct stat file_stats;
     int fileExists = 0;
 
-    //if (stat("backup.txt", &file_stats) == 0 && file_stats.st_size > 0)
+    // if (stat("backup.txt", &file_stats) == 0 && file_stats.st_size > 0)
     if (stat("backup.txt", &file_stats) == 0)
     {
         fileExists = 1;
@@ -44,11 +42,11 @@ int main()
         if (!node_array)
         {
             node_array = build_node_array(current_node_array_size);
-        if (!node_array)
-        {
-            printf("Unable to allocate memory.\n");
-            return -1;
-        }
+            if (!node_array)
+            {
+                printf("Unable to allocate memory.\n");
+                return -1;
+            }
         }
     }
     else
@@ -68,8 +66,8 @@ int main()
     while (quit_flag == 0)
     {
         num_nodes = calc_num_nodes(node_array, current_node_array_size);
-       
-       sync_status = check_sync_status(node_array, current_node_array_size);
+
+        sync_status = check_sync_status(node_array, current_node_array_size);
 
         char sync_symbol;
 
@@ -85,17 +83,16 @@ int main()
         printf("[%c%d]>", sync_symbol, num_nodes);
         fflush(stdout);
 
-
-        //int fd = open("./file.txt", O_RDONLY);
+        // int fd = open("./file.txt", O_RDONLY);
         char *input_string = my_readline(0);
-        if(input_string == NULL) 
+        if (input_string == NULL)
         {
             quit_flag = 1;
             free(input_string);
             break;
         }
-        if(strcmp(input_string, "") == 0 || strcmp(input_string, " ") == 0)
-        {   
+        if (strcmp(input_string, "") == 0 || strcmp(input_string, " ") == 0)
+        {
             free(input_string);
             continue;
         }
@@ -111,9 +108,9 @@ int main()
         char **tokens_list = parse_string(input_string, INPUT_STRING_LENGTH, num_tokens);
         if (!tokens_list)
         {
-            error_message6(); 
+            error_message6();
             free(num_tokens);
-            free(input_string); 
+            free(input_string);
             continue;
         }
 
@@ -150,47 +147,60 @@ int main()
                 ok_computer();
         }
 
-        //add block bid nid       add block bid *
+        // add block bid nid       add block bid *
         else if (*num_tokens == 4 && my_strcmp(add_c, tokens_list[0]) == 0 && my_strcmp(block_c, tokens_list[1]) == 0)
         {
-            if(add_block(tokens_list[3], tokens_list[2], node_array, current_node_array_size) < 0)
+            if (add_block(tokens_list[3], tokens_list[2], node_array, current_node_array_size) < 0)
             {
                 goto cleanup;
             }
             else
                 ok_computer();
-        } 
-        
-        //ls          
+        }
+
+        // remove block bid nid
+        //  Handle 'rm block' command
+        else if (*num_tokens == 4 && my_strcmp(rm_c, tokens_list[0]) == 0 && my_strcmp(block_c, tokens_list[1]) == 0)
+        {
+            if (remove_block(tokens_list[3], tokens_list[2], node_array, current_node_array_size) < 0)
+            {
+                goto cleanup;
+            }
+            else
+            {
+                ok_computer();
+            }
+        }
+        // ls
         else if (*num_tokens == 1 && my_strcmp(ls_c, tokens_list[0]) == 0)
         {
-            if(list_nodes(node_array, current_node_array_size) < 0)
+            if (list_nodes(node_array, current_node_array_size) < 0)
             {
                 goto cleanup;
             }
         }
 
-        //ls -l
+        // ls -l
         else if (*num_tokens == 2 && my_strcmp(ls_c, tokens_list[0]) == 0 && my_strcmp(l_c, tokens_list[1]) == 0)
         {
-            if(list_nodes_blocks(node_array, current_node_array_size) < 0)
+            if (list_nodes_blocks(node_array, current_node_array_size) < 0)
             {
                 goto cleanup;
             }
         }
 
-        //sync
+        // sync
         else if (*num_tokens == 1 && my_strcmp(sync_c, tokens_list[0]) == 0)
         {
-            if(sync_blockchain(node_array, current_node_array_size) < 0)
+            if (sync_blockchain(node_array, current_node_array_size) < 0)
             {
                 goto cleanup;
             }
             else
                 ok_computer();
         }
-        
-        //quit 
+
+        // quit
         else if (my_strcmp(quit_c, tokens_list[0]) == 0)
         {
             quit_flag = 1;
@@ -211,7 +221,7 @@ int main()
         free(input_string);
     }
 
-    close(fd); 
+    close(fd);
     free_node_array(node_array, current_node_array_size);
     free(current_node_array_size);
     return 0;

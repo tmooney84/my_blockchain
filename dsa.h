@@ -24,6 +24,7 @@ typedef struct Node
     Block *block_list;
 } Node;
 
+int compare_ints(const void *a, const void *b);
 int find_nl_index(const char *s);
 char *combine_str_and_free_first(char *s1, char *s2, int len2);
 void init_my_readline();

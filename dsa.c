@@ -665,11 +665,11 @@ int sort_node_array(Node **node_array, int *current_node_array_size)
 
 int list_nodes(Node **node_array, int *current_node_array_size)
 {
-    // if (!sort_node_array(node_array, current_node_array_size))
-    // {
-    //     printf("Unable to sort node_array");
-    //     return -1;
-    // }
+    if (!sort_node_array(node_array, current_node_array_size))
+    {
+        printf("Unable to sort node_array");
+        return -1;
+    }
 
     for (int i = 0; i < *current_node_array_size; i++)
     {
@@ -685,11 +685,11 @@ int list_nodes(Node **node_array, int *current_node_array_size)
 
 int list_nodes_blocks(Node **node_array, int *current_node_array_size)
 {
-    // if (!sort_node_array(node_array, current_node_array_size))
-    // {
-    //     printf("Unable to sort node_array");
-    //     return -1;
-    // }
+    if (!sort_node_array(node_array, current_node_array_size))
+    {
+        printf("Unable to sort node_array");
+        return -1;
+    }
 
     for (int i = 0; i < *current_node_array_size; i++)
     {
@@ -703,7 +703,7 @@ int list_nodes_blocks(Node **node_array, int *current_node_array_size)
 
         while (current != NULL)
         {
-            printf(" %ld", current->block_id);
+            printf(", %ld", current->block_id);
             current = current->next;
         }
         printf("\n");
@@ -763,6 +763,11 @@ int sync_blockchain(Node **node_array, int *current_node_array_size)
     return 0;
 }
 
+int compare_ints(const void *a, const void *b)
+{
+    return (*(int *)a - *(int *)b);
+}
+
 int *build_bid_numbers(int bid_array_size, Node **node_array, int *current_node_array_size)
 {
     int *bid_numbers = malloc(INITIAL_NODE_ARRAY_SIZE * sizeof(int));
@@ -796,6 +801,9 @@ int *build_bid_numbers(int bid_array_size, Node **node_array, int *current_node_
             }
         }
     }
+
+    qsort(bid_numbers, block_idx, sizeof(int), compare_ints); // Add after filling bid_numbers
+
     return bid_numbers;
 }
 
