@@ -17,7 +17,6 @@ int main()
     struct stat file_stats;
     int fileExists = 0;
 
-    // if (stat("backup.txt", &file_stats) == 0 && file_stats.st_size > 0)
     if (stat("backup.txt", &file_stats) == 0)
     {
         fileExists = 1;
@@ -83,7 +82,6 @@ int main()
         printf("[%c%d]>", sync_symbol, num_nodes);
         fflush(stdout);
 
-        // int fd = open("./file.txt", O_RDONLY);
         char *input_string = my_readline(0);
         if (input_string == NULL)
         {
@@ -159,7 +157,6 @@ int main()
         }
 
         // remove block bid nid
-        //  Handle 'rm block' command
         else if (*num_tokens == 4 && my_strcmp(rm_c, tokens_list[0]) == 0 && my_strcmp(block_c, tokens_list[1]) == 0)
         {
             if (remove_block(tokens_list[3], tokens_list[2], node_array, current_node_array_size) < 0)

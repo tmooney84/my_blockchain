@@ -665,12 +665,6 @@ int sort_node_array(Node **node_array, int *current_node_array_size)
 
 int list_nodes(Node **node_array, int *current_node_array_size)
 {
-    // if (!sort_node_array(node_array, current_node_array_size))
-    // {
-    //     printf("Unable to sort node_array");
-    //     return -1;
-    // }
-
     for (int i = 0; i < *current_node_array_size; i++)
     {
         if (node_array[i]->node_id == 0)
@@ -744,8 +738,6 @@ int sync_blockchain(Node **node_array, int *current_node_array_size)
 
     int bid_array_size = INITIAL_NODE_ARRAY_SIZE;
 
-    //LEFT OFF HERE april 23 *** check if num_bids is the correct size. Also check if
-    //writing linked list correctly and finally if the print is ending correctly
     int *bid_numbers = build_bid_numbers(bid_array_size, num_bids, node_array, current_node_array_size);
     if (!bid_numbers)
     {
@@ -896,12 +888,6 @@ int save_blockchain_data(int fd, Node **node_array, int *current_node_array_size
         printf("Unable to write to file");
         return -1;
     }
-
-    // if (!sort_node_array(node_array, current_node_array_size))
-    // {
-    //     printf("Unable to sort node_array");
-    //     return -1;
-    // }
 
     // if no data to save
     else if (node_array[0]->node_id == 0)
@@ -1063,9 +1049,6 @@ int check_sync_status(Node **node_array, int *current_node_array_size)
                         break;
                     }
                 }
-                // need to see if all the numbers in the bid_numbers array are
-                // part of each blocklist
-
                 current = current->next;
             }
             for (int i = 0; i < *num_unique_bids; i++)
