@@ -685,12 +685,6 @@ int list_nodes(Node **node_array, int *current_node_array_size)
 
 int list_nodes_blocks(Node **node_array, int *current_node_array_size)
 {
-    // if (!sort_node_array(node_array, current_node_array_size))
-    // {
-    //     printf("Unable to sort node_array");
-    //     return -1;
-    // }
-
     for (int i = 0; i < *current_node_array_size; i++)
     {
         if (node_array[i]->node_id == 0)
@@ -744,6 +738,8 @@ int sync_blockchain(Node **node_array, int *current_node_array_size)
 
     int bid_array_size = INITIAL_NODE_ARRAY_SIZE;
 
+    //LEFT OFF HERE april 23 *** check if num_bids is the correct size. Also check if
+    //writing linked list correctly and finally if the print is ending correctly
     int *bid_numbers = build_bid_numbers(bid_array_size, num_bids, node_array, current_node_array_size);
     if (!bid_numbers)
     {
@@ -752,7 +748,7 @@ int sync_blockchain(Node **node_array, int *current_node_array_size)
         return -1;
     }
 
-    if (rebuild_node_array(node_array, current_node_array_size, bid_numbers, *bid_numbers) < 0)
+    if (rebuild_node_array(node_array, current_node_array_size, bid_numbers, *num_bids) < 0)
     {
         printf("Unable to sync blockchain.\n");
         free(num_bids);
@@ -796,7 +792,7 @@ int *build_bid_numbers(int bid_array_size, int *num_bids, Node **node_array, int
         }
     }
 
-    *num_bids = block_idx + 1;
+    *num_bids = block_idx;
 
     return bid_numbers;
 }
@@ -817,7 +813,7 @@ void bubble_sort_ints(int arr[], int n)
     }
 }
 
-int rebuild_node_array(Node **node_array, int *current_node_array_size, int bid_numbers[], int bid_nums)
+int rebuild_node_array(Node **node_array, int *current_node_array_size, int bid_numbers[], int num_bids)
 {
     // If no blocks exists to sync
     if (bid_numbers[0] == 0)
@@ -836,8 +832,8 @@ int rebuild_node_array(Node **node_array, int *current_node_array_size, int bid_
             continue;
         }
 
-        int found[bid_nums];
-        my_memset(found, 0, bid_nums);
+        int found[num_bids];
+        my_memset(found, 0, num_bids * sizeof(int));
 
         Block *current = node_array[i]->block_list;
         Block *tail = NULL;
@@ -845,7 +841,7 @@ int rebuild_node_array(Node **node_array, int *current_node_array_size, int bid_
         // walk list and mark found
         while (current != NULL)
         {
-            for (int j = 0; j < bid_nums; j++)
+            for (int j = 0; j < num_bids; j++)
             {
                 if (!found[j] && current->block_id == bid_numbers[j])
                 {
@@ -858,7 +854,7 @@ int rebuild_node_array(Node **node_array, int *current_node_array_size, int bid_
         }
 
         // add missing bids
-        for (int k = 0; k < bid_nums; k++)
+        for (int k = 0; k < num_bids; k++)
         {
             if (found[k] == 0)
             {
@@ -869,6 +865,7 @@ int rebuild_node_array(Node **node_array, int *current_node_array_size, int bid_
                     return -1;
                 }
                 new_block->block_id = bid_numbers[k];
+                new_block->next = NULL;
 
                 if (node->block_list == NULL)
                 {
