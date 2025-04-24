@@ -695,9 +695,15 @@ int list_nodes_blocks(Node **node_array, int *current_node_array_size)
         printf("%ld:", node_array[i]->node_id);
         Block *current = node_array[i]->block_list;
 
-        while (current != NULL)
+        if(current != NULL)
         {
             printf(" %ld", current->block_id);
+            current = current->next;
+        }
+        
+        while (current != NULL)
+        {
+            printf(", %ld", current->block_id);
             current = current->next;
         }
         printf("\n");
