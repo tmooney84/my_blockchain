@@ -24,7 +24,6 @@ typedef struct Node
     Block *block_list;
 } Node;
 
-int compare_ints(const void *a, const void *b);
 int find_nl_index(const char *s);
 char *combine_str_and_free_first(char *s1, char *s2, int len2);
 void init_my_readline();
@@ -48,7 +47,7 @@ int save_blockchain_data(int fd, Node **node_array, int *current_node_array_size
 Node **load_blockchain_data(int fd, int *current_node_array_size);
 int free_node_array(Node **node_array, int *current_node_array_size);
 int free_list(Block *head);
-int *build_bid_numbers(int bid_array_size, Node **node_array, int *current_node_array_size);
+int *build_bid_numbers(int bid_array_size, int *num_bids, Node **node_array, int *current_node_array_size);
 int rebuild_node_array(Node **node_array, int *current_node_array_size, int bid_numbers[], int bid_array_size);
 ssize_t parse_ssize_t(char *string, int str_len);
 int check_sync_status(Node **node_array, int *current_node_array_size);

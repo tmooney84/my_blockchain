@@ -734,41 +734,39 @@ int check_unique(ssize_t bid_num, int bid_numbers[], int array_size)
 int sync_blockchain(Node **node_array, int *current_node_array_size)
 {
     // arbitary size
+    int *num_bids = malloc(sizeof(int));
+    if (!num_bids)
+    {
+        printf("Unable to allocate memory");
+        return 0;
+    }
+    *num_bids = 0;
+
     int bid_array_size = INITIAL_NODE_ARRAY_SIZE;
 
-    int *bid_numbers = build_bid_numbers(bid_array_size, node_array, current_node_array_size);
+    int *bid_numbers = build_bid_numbers(bid_array_size, num_bids, node_array, current_node_array_size);
     if (!bid_numbers)
     {
         printf("Unable to sync blockchain.\n");
-        free(bid_numbers);
+        free(num_bids);
         return -1;
     }
 
-    // if (sort_node_array(node_array, current_node_array_size) < 0)
-    // {
-    //     printf("Unable to sync blockchain.\n");
-    //     free(bid_numbers);
-    //     return -1;
-    // }
-
-    if (rebuild_node_array(node_array, current_node_array_size, bid_numbers, bid_array_size) < 0)
+    if (rebuild_node_array(node_array, current_node_array_size, bid_numbers, *bid_numbers) < 0)
     {
         printf("Unable to sync blockchain.\n");
+        free(num_bids);
         free(bid_numbers);
         return -1;
     }
 
+    free(num_bids);
     free(bid_numbers);
 
     return 0;
 }
 
-int compare_ints(const void *a, const void *b)
-{
-    return (*(int *)a - *(int *)b);
-}
-
-int *build_bid_numbers(int bid_array_size, Node **node_array, int *current_node_array_size)
+int *build_bid_numbers(int bid_array_size, int *num_bids, Node **node_array, int *current_node_array_size)
 {
     int *bid_numbers = malloc(INITIAL_NODE_ARRAY_SIZE * sizeof(int));
     if (!bid_numbers)
@@ -776,11 +774,7 @@ int *build_bid_numbers(int bid_array_size, Node **node_array, int *current_node_
         printf("Unable to allocate memory.\n");
         return NULL;
     }
-
-    for (int i = 0; i < INITIAL_NODE_ARRAY_SIZE; i++)
-    {
-        bid_numbers[i] = 0;
-    }
+    my_memset(bid_numbers, 0, INITIAL_NODE_ARRAY_SIZE);
 
     int block_idx = 0;
 
@@ -802,13 +796,19 @@ int *build_bid_numbers(int bid_array_size, Node **node_array, int *current_node_
         }
     }
 
+    *num_bids = block_idx + 1;
+
     return bid_numbers;
 }
 
-void bubble_sort_ints(int arr[], int n) {
-    for (int i = 0; i < n - 1; i++) {
-        for (int j = 0; j < n - i - 1; j++) {
-            if (arr[j] > arr[j + 1]) {
+void bubble_sort_ints(int arr[], int n)
+{
+    for (int i = 0; i < n - 1; i++)
+    {
+        for (int j = 0; j < n - i - 1; j++)
+        {
+            if (arr[j] > arr[j + 1])
+            {
                 int tmp = arr[j];
                 arr[j] = arr[j + 1];
                 arr[j + 1] = tmp;
@@ -817,7 +817,7 @@ void bubble_sort_ints(int arr[], int n) {
     }
 }
 
-int rebuild_node_array(Node **node_array, int *current_node_array_size, int bid_numbers[], int bid_array_size)
+int rebuild_node_array(Node **node_array, int *current_node_array_size, int bid_numbers[], int bid_nums)
 {
     // If no blocks exists to sync
     if (bid_numbers[0] == 0)
@@ -827,46 +827,57 @@ int rebuild_node_array(Node **node_array, int *current_node_array_size, int bid_
         return 0;
     }
 
-    // clear and rebuild node_array with synced blocks
     for (int i = 0; i < *current_node_array_size; i++)
     {
-        // if node array doesn't exist
-        if (node_array[i]->node_id == 0)
+        Node *node = node_array[i];
+
+        if (!node || node->node_id == 0)
         {
             continue;
         }
 
-        // if node array exists
-        else if (node_array[i]->node_id != 0)
+        int found[bid_nums];
+        my_memset(found, 0, bid_nums);
+
+        Block *current = node_array[i]->block_list;
+        Block *tail = NULL;
+
+        // walk list and mark found
+        while (current != NULL)
         {
-            // clear list
-            free_list(node_array[i]->block_list);
-            node_array[i]->block_list = NULL;
-
-            // add blocks to list
-            Block *current = NULL;
-
-            for (int j = 0; bid_numbers[j] != 0 && j < bid_array_size; j++)
+            for (int j = 0; j < bid_nums; j++)
             {
-                // set node info
+                if (!found[j] && current->block_id == bid_numbers[j])
+                {
+                    found[j] = 1;
+                    break;
+                }
+            }
+            tail = current;
+            current = current->next;
+        }
+
+        // add missing bids
+        for (int k = 0; k < bid_nums; k++)
+        {
+            if (found[k] == 0)
+            {
                 Block *new_block = create_block();
                 if (!new_block)
                 {
                     printf("Failure to allocate memory.\n");
                     return -1;
                 }
+                new_block->block_id = bid_numbers[k];
 
-                new_block->block_id = bid_numbers[j];
-
-                if (node_array[i]->block_list == NULL)
+                if (node->block_list == NULL)
                 {
-                    node_array[i]->block_list = new_block;
-                    current = new_block;
+                    node->block_list = tail = new_block;
                 }
                 else
                 {
-                    current->next = new_block;
-                    current = new_block;
+                    tail->next = new_block;
+                    tail = new_block;
                 }
             }
         }
@@ -883,11 +894,11 @@ int save_blockchain_data(int fd, Node **node_array, int *current_node_array_size
         return -1;
     }
 
-    if (!sort_node_array(node_array, current_node_array_size))
-    {
-        printf("Unable to sort node_array");
-        return -1;
-    }
+    // if (!sort_node_array(node_array, current_node_array_size))
+    // {
+    //     printf("Unable to sort node_array");
+    //     return -1;
+    // }
 
     // if no data to save
     else if (node_array[0]->node_id == 0)
@@ -933,7 +944,7 @@ Node **load_blockchain_data(int fd, int *current_node_array_size)
     // read number of nodes
     if (read(fd, current_node_array_size, sizeof(int)) != sizeof(int))
     {
-        //printf("Unable to read file.\n");
+        // printf("Unable to read file.\n");
         return NULL;
     }
 
@@ -1000,24 +1011,20 @@ int check_sync_status(Node **node_array, int *current_node_array_size)
 {
     // aggregating unique block id's within blockchain
     int bid_array_size = INITIAL_NODE_ARRAY_SIZE;
-    int *bid_numbers = build_bid_numbers(bid_array_size, node_array, current_node_array_size);
+    int *num_unique_bids = malloc(sizeof(int));
+    if(!num_unique_bids)
+    {
+        printf("Unable to allocate memory.");
+        return -1;
+    }
+    *num_unique_bids = 0;
+
+    int *bid_numbers = build_bid_numbers(bid_array_size, num_unique_bids, node_array, current_node_array_size);
     if (!bid_numbers)
     {
         printf("Unable to sync blockchain.\n");
+        free(num_unique_bids);
         return -1;
-    }
-    int num_unique_bids = 0;
-
-    for (int i = 0; i < bid_array_size; i++)
-    {
-        if (bid_numbers[i] != 0)
-        {
-            num_unique_bids++;
-        }
-        else
-        {
-            break;
-        }
     }
 
     // checking sync status of nodes
@@ -1032,6 +1039,7 @@ int check_sync_status(Node **node_array, int *current_node_array_size)
         // current node is empty of blocks, but others are not
         else if (node_array[i]->node_id != 0 && node_array[i]->block_list == NULL && bid_numbers[0] != 0)
         {
+            free(num_unique_bids);
             free(bid_numbers);
             return 0;
         }
@@ -1044,7 +1052,7 @@ int check_sync_status(Node **node_array, int *current_node_array_size)
             Block *current = node_array[i]->block_list;
             while (current != NULL)
             {
-                for (int i = 0; i < num_unique_bids; i++)
+                for (int i = 0; i < *num_unique_bids; i++)
                 {
                     if (bid_numbers[i] == (int)current->block_id)
                     {
@@ -1057,10 +1065,11 @@ int check_sync_status(Node **node_array, int *current_node_array_size)
 
                 current = current->next;
             }
-            for (int i = 0; i < num_unique_bids; i++)
+            for (int i = 0; i < *num_unique_bids; i++)
             {
                 if (contained_array[i] == 0)
                 {
+                    free(num_unique_bids);
                     free(bid_numbers);
                     return 0;
                 }
@@ -1068,6 +1077,7 @@ int check_sync_status(Node **node_array, int *current_node_array_size)
         }
     }
 
+    free(num_unique_bids);
     free(bid_numbers);
     return 1;
 }
