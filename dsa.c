@@ -860,7 +860,7 @@ int rebuild_node_array(Node **node_array, int *current_node_array_size, int bid_
         }
 
         // add missing bids
-        for (int k = 0; k < num_bids; k++)
+        for (int k = num_bids - 1; k >= 0; k--)
         {
             if (found[k] == 0)
             {
